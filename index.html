@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,15 +12,12 @@
     <header>
         <div class="header-top">
             <h1>CATÁLOGO <span>OmniSV</span></h1>
+            <button id="btnTema" class="btn-tema" title="Cambiar tema">🌓</button>
         </div>
         <div class="barra-superior">
             <input type="text" id="buscador" placeholder="🔍 Buscar productos...">
             <select id="filtroCategoria">
                 <option value="todas">Todas las categorías</option>
-                <option value="dama">Dama</option>
-                <option value="belleza">Belleza</option>
-                <option value="tecnologia">Tecnología</option>
-                <option value="cocina">Cocina</option>
             </select>
             <a href="pdf.html" class="btn-pdf" target="_blank">📄 Ver Catálogo Completo</a>
         </div>
@@ -37,15 +34,15 @@
     <footer>
         <div id="terminosCondiciones"></div>
         <div class="footer-info">
-            <p><strong>OmniSV</strong> | 📱 WhatsApp: +503 7131-2121</p>
+            <p><strong>OmniSV</strong> | 📱 <a href="https://wa.me/50371312121" class="whatsapp-link" target="_blank">WhatsApp: +503 7131-2121</a></p>
         </div>
     </footer>
 
-    <!-- Firebase SDKs (versión compat para CDN) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     
-    <!-- Scripts personalizados -->
+    <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/catalogo.js"></script>
 </body>
