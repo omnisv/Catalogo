@@ -1,5 +1,5 @@
 // =============================================
-// CATÁLOGO COMPLETO PDF - OMNI SV
+// CATÁLOGO PDF - OMNI SV
 // =============================================
 
 const WHATSAPP_NUMERO = "50371312121";
@@ -7,26 +7,51 @@ const catalogoPdf = document.getElementById('catalogoPdf');
 const terminosPdf = document.getElementById('terminosPdf');
 const fechaActualizacion = document.getElementById('fechaActualizacion');
 
+let categoriasMap = {};
+
 // =============================================
-// CARGAR CATÁLOGO COMPLETO
+// CARGAR CATEGORÍAS
+// =============================================
+async function cargarCategorias() {
+    try {
+        const snapshot = await db.collection('categorias').orderBy('nombre').get();
+        snapshot.forEach(doc => {
+            categoriasMap[doc.id] = doc.data().nombre;
+        });
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// =============================================
+// CARGAR CATÁLOGO
 // =============================================
 async function cargarCatalogoCompleto() {
     try {
-        const snapshot = await db.collection('productos').orderBy('categoria').get();
+        const snapshot = await db.collection('productos').get();
         
         if (snapshot.empty) {
-            catalogoPdf.innerHTML = '<p class="vacio">No hay productos en el catálogo.</p>';
+            catalogoPdf.innerHTML = '<p class="vacio">No hay productos.</p>';
             return;
         }
         
+        // Agrupar por categoría
         const productosPorCategoria = {};
+        
         snapshot.forEach(doc => {
             const producto = doc.data();
-            const categoria = producto.categoria || 'sin-categoria';
-            if (!productosPorCategoria[categoria]) {
-                productosPorCategoria[categoria] = [];
-            }
-            productosPorCategoria[categoria].push(producto);
+            const cats = producto.categorias || ['sin-categoria'];
+            
+            cats.forEach(catId => {
+                const catNombre = categoriasMap[catId] || catId;
+                if (!productosPorCategoria[catNombre]) {
+                    productosPorCategoria[catNombre] = [];
+                }
+                // Evitar duplicados si el producto tiene múltiples categorías
+                if (!productosPorCategoria[catNombre].find(p => p.nombre === producto.nombre)) {
+                    productosPorCategoria[catNombre].push(producto);
+                }
+            });
         });
         
         let html = '';
@@ -37,8 +62,7 @@ async function cargarCatalogoCompleto() {
             
             productos.forEach(producto => {
                 const fotosAdicionales = producto.fotos.length > 1 
-                    ? `<p class="fotos-adicionales">📸 +${producto.fotos.length - 1} foto(s) adicional(es)</p>` 
-                    : '';
+                    ? `<p class="fotos-adicionales">📸 +${producto.fotos.length - 1} foto(s)</p>` : '';
                 
                 html += `
                     <div class="producto-pdf-item">
@@ -48,19 +72,19 @@ async function cargarCatalogoCompleto() {
                         <div class="pdf-info">
                             <h3>${producto.nombre}</h3>
                             <p class="precio">$${producto.precio.toFixed(2)}</p>
-                            <p class="descripcion-pdf">${producto.descripcion || 'Sin descripción'}</p>
+                            <p class="descripcion-pdf">${producto.descripcion || ''}</p>
                             ${fotosAdicionales}
                         </div>
                     </div>`;
             });
             
-            html += `</div></div>`;
+            html += '</div></div>';
         }
         
         catalogoPdf.innerHTML = html;
     } catch (error) {
         console.error('Error:', error);
-        catalogoPdf.innerHTML = '<p class="error">Error al cargar el catálogo.</p>';
+        catalogoPdf.innerHTML = '<p class="error">Error al cargar.</p>';
     }
 }
 
@@ -71,10 +95,9 @@ async function cargarTerminosPdf() {
     try {
         const doc = await db.collection('configuracion').doc('terminos').get();
         if (doc.exists) {
-            const data = doc.data();
             terminosPdf.innerHTML = `
                 <h4>📋 Términos y Condiciones</h4>
-                <div class="terminos-texto">${data.texto.replace(/\n/g, '<br>')}</div>
+                <div class="terminos-texto">${doc.data().texto.replace(/\n/g, '<br>')}</div>
             `;
         }
     } catch (error) {
@@ -85,16 +108,15 @@ async function cargarTerminosPdf() {
 // =============================================
 // INICIALIZAR
 // =============================================
-document.addEventListener('DOMContentLoaded', () => {
-    const fecha = new Date();
-    fechaActualizacion.textContent = fecha.toLocaleDateString('es-SV', {
+document.addEventListener('DOMContentLoaded', async () => {
+    fechaActualizacion.textContent = new Date().toLocaleDateString('es-SV', {
         year: 'numeric', month: 'long', day: 'numeric'
     });
     
+    await cargarCategorias();
     cargarCatalogoCompleto();
     cargarTerminosPdf();
     
-    // Protecciones básicas
     document.addEventListener('contextmenu', (e) => e.preventDefault());
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey && (e.key === 's' || e.key === 'u')) || e.key === 'F12') {
