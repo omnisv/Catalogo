@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Completo | OmniSV</title>
+    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+</head>
+<body class="pdf-body" oncontextmenu="return false;">
+    
+    <div class="pdf-container">
+        <!-- Encabezado -->
+        <header class="pdf-header">
+            <div class="pdf-header-content">
+                <h1>CATÁLOGO COMPLETO</h1>
+                <h2>OmniSV</h2>
+                <p class="fecha-actualizacion">Actualizado: <span id="fechaActualizacion"></span></p>
+                <p class="contacto-header">WhatsApp: +503 7131-2121</p>
+            </div>
+            <button onclick="window.print()" class="btn-imprimir no-print">🖨️ Imprimir</button>
+        </header>
+
+        <!-- Contenido del catálogo -->
+        <div id="catalogoPdf">
+            <p>Cargando catálogo completo...</p>
+        </div>
+
+        <!-- Pie de página -->
+        <footer class="pdf-footer">
+            <div id="terminosPdf"></div>
+            <div class="footer-contacto">
+                <p><strong>OmniSV</strong></p>
+                <p>📱 WhatsApp: +503 7131-2121</p>
+                <p class="derechos">© 2024 OmniSV - Todos los derechos reservados</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/pdf.js"></script>
+</body>
+</html>
