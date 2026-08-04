@@ -50,7 +50,7 @@ async function cargarCategorias() {
 }
 
 // =============================================
-// CARGAR PRODUCTOS
+// CARGAR PRODUCTOS (solo activos)
 // =============================================
 async function cargarProductos() {
     try {
@@ -63,8 +63,17 @@ async function cargarProductos() {
         }
         
         snapshot.forEach(doc => {
-            todosLosProductos.push({ id: doc.id, ...doc.data() });
+            const producto = doc.data();
+            // SOLO mostrar productos activos
+            if (producto.activo !== false) {
+                todosLosProductos.push({ id: doc.id, ...producto });
+            }
         });
+        
+        if (todosLosProductos.length === 0) {
+            contenedorProductos.innerHTML = '<div class="sin-resultados"><p>📦 No hay productos disponibles en este momento.</p></div>';
+            return;
+        }
         
         mostrarProductos(todosLosProductos);
     } catch (error) {
@@ -97,26 +106,37 @@ function crearTarjetaProducto(producto) {
     const card = document.createElement('div');
     card.classList.add('producto-card');
     
-    // Galería
+    // Galería con imagen adaptable
     let galeriaHTML = '<div class="galeria">';
-    galeriaHTML += `<img src="${producto.fotos[0]}" alt="${producto.nombre}" class="foto-principal" onerror="this.src='https://via.placeholder.com/400x300?text=Sin+Imagen'">`;
+    galeriaHTML += `<img src="${producto.fotos[0]}" 
+                         alt="${producto.nombre}" 
+                         class="foto-principal"
+                         onerror="this.src='https://via.placeholder.com/400x300?text=Sin+Imagen'"
+                         loading="lazy">`;
     
     if (producto.fotos.length > 1) {
         galeriaHTML += '<div class="miniaturas">';
         producto.fotos.forEach((url, index) => {
-            galeriaHTML += `<img src="${url}" alt="Foto ${index + 1}" class="miniatura ${index === 0 ? 'activa' : ''}" data-full-url="${url}" onerror="this.style.display='none'">`;
+            galeriaHTML += `<img src="${url}" 
+                                 alt="Foto ${index + 1}" 
+                                 class="miniatura ${index === 0 ? 'activa' : ''}" 
+                                 data-full-url="${url}"
+                                 onerror="this.style.display='none'"
+                                 loading="lazy">`;
         });
         galeriaHTML += '</div>';
     }
     galeriaHTML += '</div>';
     
-    // Categorías
+    // Categorías como badges
     const catsNombres = producto.categorias 
         ? producto.categorias.map(id => categoriasMap[id] || id)
         : [];
-    const badgesHTML = catsNombres.map(cat => `<span class="categoria-badge">${cat}</span>`).join(' ');
+    const badgesHTML = catsNombres.map(cat => 
+        `<span class="categoria-badge">${cat}</span>`
+    ).join(' ');
     
-    // WhatsApp
+    // WhatsApp link
     const mensaje = `Hola, vi en OmniSV: *${producto.nombre}* ($${producto.precio.toFixed(2)}) y me interesa.`;
     const linkWhatsApp = `https://wa.me/${WHATSAPP_NUMERO}?text=${encodeURIComponent(mensaje)}`;
     
@@ -133,7 +153,7 @@ function crearTarjetaProducto(producto) {
         </div>
     `;
     
-    // Cambiar foto principal
+    // Eventos para cambiar foto principal
     const fotoPrincipal = card.querySelector('.foto-principal');
     card.querySelectorAll('.miniatura').forEach(mini => {
         mini.addEventListener('click', function() {
