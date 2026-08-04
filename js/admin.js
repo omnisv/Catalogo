@@ -1,14 +1,11 @@
 // =============================================
-// PANEL DE ADMINISTRACIÓN COMPLETO - OMNI SV
+// PANEL DE ADMINISTRACIÓN - OMNI SV
 // =============================================
 
 const ADMIN_USER = "omnisv";
 const ADMIN_PASS = "omniSV_26";
-const WHATSAPP_NUMERO = "50371312121";
 
-// =============================================
-// ELEMENTOS DEL DOM
-// =============================================
+// Elementos del DOM
 const pantallaLogin = document.getElementById('pantallaLogin');
 const panelAdmin = document.getElementById('panelAdmin');
 const formLogin = document.getElementById('formLogin');
@@ -26,6 +23,7 @@ const btnAgregarUrl = document.getElementById('btnAgregarUrl');
 const listaProductosAdmin = document.getElementById('listaProductosAdmin');
 const checkboxesCategorias = document.getElementById('checkboxesCategorias');
 const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
+const buscadorAdmin = document.getElementById('buscadorAdmin');
 
 // Categorías
 const formCategoria = document.getElementById('formCategoria');
@@ -40,6 +38,8 @@ const listaCategoriasAdmin = document.getElementById('listaCategoriasAdmin');
 const btnGuardarTerminos = document.getElementById('btnGuardarTerminos');
 const terminosTexto = document.getElementById('terminosTexto');
 
+let todosLosProductosAdmin = [];
+
 // =============================================
 // TEMA OSCURO/CLARO
 // =============================================
@@ -51,7 +51,6 @@ function toggleTema() {
     localStorage.setItem('tema', nuevoTema);
 }
 
-// Aplicar tema guardado
 const temaGuardado = localStorage.getItem('tema') || 'light';
 document.documentElement.setAttribute('data-theme', temaGuardado);
 
@@ -60,7 +59,7 @@ if (btnTemaAdmin) {
 }
 
 // =============================================
-// SISTEMA "RECORDARME"
+// RECORDARME - AUTO LOGIN
 // =============================================
 document.addEventListener('DOMContentLoaded', () => {
     const credencialesGuardadas = localStorage.getItem('omnisv_credenciales');
@@ -70,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('password').value = password;
         recordarmeCheck.checked = true;
         
-        // Auto-login si hay credenciales guardadas
         if (usuario === ADMIN_USER && password === ADMIN_PASS) {
             iniciarSesion();
         }
@@ -135,6 +133,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         
         if (tab === 'productos') {
             document.getElementById('seccionProductos').classList.add('active');
+            cargarProductosAdmin();
         } else if (tab === 'categorias') {
             document.getElementById('seccionCategorias').classList.add('active');
             cargarCategoriasAdmin();
@@ -143,6 +142,31 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         }
     });
 });
+
+// =============================================
+// BÚSQUEDA DE PRODUCTOS EN ADMIN
+// =============================================
+if (buscadorAdmin) {
+    buscadorAdmin.addEventListener('input', () => {
+        const texto = buscadorAdmin.value.toLowerCase().trim();
+        filtrarProductosAdmin(texto);
+    });
+}
+
+function filtrarProductosAdmin(texto) {
+    if (texto === '') {
+        renderizarListaProductos(todosLosProductosAdmin);
+        return;
+    }
+    
+    const filtrados = todosLosProductosAdmin.filter(producto => {
+        return producto.nombre.toLowerCase().includes(texto) ||
+               (producto.descripcion && producto.descripcion.toLowerCase().includes(texto)) ||
+               (producto.categoriaNombres && producto.categoriaNombres.toLowerCase().includes(texto));
+    });
+    
+    renderizarListaProductos(filtrados);
+}
 
 // =============================================
 // GESTIÓN DE URLs DE FOTOS
@@ -163,6 +187,15 @@ btnAgregarUrl.addEventListener('click', () => {
             alert('Debe mantener al menos una URL de foto');
         }
     });
+});
+
+// Evento para el botón eliminar inicial
+document.querySelector('.btn-eliminar-url')?.addEventListener('click', function() {
+    if (document.querySelectorAll('.url-entry').length > 1) {
+        this.parentElement.remove();
+    } else {
+        alert('Debe mantener al menos una URL de foto');
+    }
 });
 
 // =============================================
@@ -204,7 +237,6 @@ formProducto.addEventListener('submit', async (e) => {
     const descripcion = document.getElementById('descripcion').value.trim();
     const id = productoId.value;
     
-    // Obtener categorías seleccionadas
     const checkboxes = document.querySelectorAll('.checkbox-categoria:checked');
     const categorias = [];
     checkboxes.forEach(cb => categorias.push(cb.value));
@@ -214,7 +246,6 @@ formProducto.addEventListener('submit', async (e) => {
         return;
     }
     
-    // Obtener URLs de fotos
     const inputsUrl = document.querySelectorAll('.url-foto');
     const fotos = [];
     inputsUrl.forEach(input => {
@@ -237,19 +268,26 @@ formProducto.addEventListener('submit', async (e) => {
     };
     
     try {
+        const btnSubmit = formProducto.querySelector('button[type="submit"]');
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = 'Guardando...';
+        
         if (id) {
-            // Editar producto existente
             await db.collection('productos').doc(id).update(productoData);
             alert('✅ Producto actualizado exitosamente');
         } else {
-            // Nuevo producto
             productoData.fechaCreacion = firebase.firestore.FieldValue.serverTimestamp();
+            productoData.activo = true;
             await db.collection('productos').add(productoData);
             alert('✅ Producto guardado exitosamente');
         }
         
         resetearFormularioProducto();
         cargarProductosAdmin();
+        
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = '💾 Guardar Producto';
+        
     } catch (error) {
         console.error('Error al guardar:', error);
         alert('❌ Error al guardar el producto');
@@ -267,7 +305,6 @@ function resetearFormularioProducto() {
             <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
         </div>
     `;
-    // Desmarcar checkboxes
     document.querySelectorAll('.checkbox-categoria').forEach(cb => cb.checked = false);
 }
 
@@ -279,19 +316,18 @@ btnCancelarEdicion.addEventListener('click', resetearFormularioProducto);
 async function cargarProductosAdmin() {
     try {
         const snapshot = await db.collection('productos').orderBy('fechaCreacion', 'desc').get();
-        listaProductosAdmin.innerHTML = '';
+        todosLosProductosAdmin = [];
         
-        if (snapshot.empty) {
-            listaProductosAdmin.innerHTML = '<p class="vacio">No hay productos aún.</p>';
-            return;
-        }
-        
-        // Obtener nombres de categorías
         const catSnapshot = await db.collection('categorias').get();
         const categoriasMap = {};
         catSnapshot.forEach(doc => {
             categoriasMap[doc.id] = doc.data().nombre;
         });
+        
+        if (snapshot.empty) {
+            listaProductosAdmin.innerHTML = '<p class="vacio">No hay productos aún. ¡Agrega el primero!</p>';
+            return;
+        }
         
         snapshot.forEach(doc => {
             const producto = doc.data();
@@ -299,26 +335,86 @@ async function cargarProductosAdmin() {
                 ? producto.categorias.map(id => categoriasMap[id] || id).join(', ')
                 : 'Sin categoría';
             
-            const div = document.createElement('div');
-            div.classList.add('producto-admin-item');
-            div.innerHTML = `
-                <img src="${producto.fotos[0]}" alt="${producto.nombre}" class="thumb-admin" onerror="this.src='https://via.placeholder.com/80?text=Sin+Img'">
-                <div class="info-admin">
-                    <strong>${producto.nombre}</strong>
-                    <span>$${producto.precio.toFixed(2)}</span>
-                    <small>Categorías: ${categoriasNombres}</small>
-                    <small>${producto.fotos.length} foto(s)</small>
-                </div>
-                <div class="acciones-admin">
-                    <button class="btn-editar" onclick="editarProducto('${doc.id}')" title="Editar">✏️</button>
-                    <button class="btn-eliminar" onclick="eliminarProducto('${doc.id}')" title="Eliminar">🗑️</button>
-                </div>
-            `;
-            listaProductosAdmin.appendChild(div);
+            todosLosProductosAdmin.push({
+                id: doc.id,
+                ...producto,
+                categoriaNombres: categoriasNombres
+            });
         });
+        
+        renderizarListaProductos(todosLosProductosAdmin);
+        
     } catch (error) {
         console.error('Error:', error);
         listaProductosAdmin.innerHTML = '<p class="error">Error al cargar productos</p>';
+    }
+}
+
+function renderizarListaProductos(productos) {
+    listaProductosAdmin.innerHTML = '';
+    
+    if (productos.length === 0) {
+        listaProductosAdmin.innerHTML = '<p class="vacio">No se encontraron productos.</p>';
+        return;
+    }
+    
+    productos.forEach(producto => {
+        const activo = producto.activo !== false;
+        const estadoClass = activo ? 'estado-activo' : 'estado-inactivo';
+        const estadoTexto = activo ? 'Activo' : 'Inactivo';
+        const toggleIcon = activo ? '👁️' : '🚫';
+        const toggleTitle = activo ? 'Inhabilitar producto' : 'Habilitar producto';
+        
+        const div = document.createElement('div');
+        div.classList.add('producto-admin-item');
+        if (!activo) div.style.opacity = '0.6';
+        
+        div.innerHTML = `
+            <img src="${producto.fotos[0]}" 
+                 alt="${producto.nombre}" 
+                 class="thumb-admin" 
+                 onerror="this.src='https://via.placeholder.com/80?text=Sin+Img'"
+                 style="object-fit: contain; background: #f0f0f0;">
+            <div class="info-admin">
+                <strong>${producto.nombre}</strong>
+                <span>$${producto.precio.toFixed(2)}</span>
+                <small>Categorías: ${producto.categoriaNombres || 'Sin categoría'}</small>
+                <small>${producto.fotos.length} foto(s)</small>
+                <span class="estado-producto ${estadoClass}">${estadoTexto}</span>
+            </div>
+            <div class="acciones-admin">
+                <button class="btn-toggle" onclick="toggleProducto('${producto.id}', ${activo})" title="${toggleTitle}">
+                    ${toggleIcon}
+                </button>
+                <button class="btn-editar" onclick="editarProducto('${producto.id}')" title="Editar">✏️</button>
+                <button class="btn-eliminar" onclick="eliminarProducto('${producto.id}')" title="Eliminar">🗑️</button>
+            </div>
+        `;
+        listaProductosAdmin.appendChild(div);
+    });
+}
+
+// =============================================
+// INHABILITAR / HABILITAR PRODUCTO
+// =============================================
+async function toggleProducto(id, estadoActual) {
+    const nuevoEstado = !estadoActual;
+    const accion = nuevoEstado ? 'habilitar' : 'inhabilitar';
+    
+    if (!confirm(`¿Estás seguro de ${accion} este producto?`)) return;
+    
+    try {
+        await db.collection('productos').doc(id).update({
+            activo: nuevoEstado,
+            fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        alert(`✅ Producto ${nuevoEstado ? 'habilitado' : 'inhabilitado'} exitosamente`);
+        cargarProductosAdmin();
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Error al cambiar el estado del producto');
     }
 }
 
@@ -328,7 +424,10 @@ async function cargarProductosAdmin() {
 async function editarProducto(id) {
     try {
         const doc = await db.collection('productos').doc(id).get();
-        if (!doc.exists) return;
+        if (!doc.exists) {
+            alert('Producto no encontrado');
+            return;
+        }
         
         const producto = doc.data();
         
@@ -337,38 +436,37 @@ async function editarProducto(id) {
         document.getElementById('precio').value = producto.precio;
         document.getElementById('descripcion').value = producto.descripcion || '';
         
-        // Cargar URLs de fotos
         contenedorUrls.innerHTML = '';
-        producto.fotos.forEach((url, index) => {
-            const div = document.createElement('div');
-            div.classList.add('url-entry');
-            div.innerHTML = `
-                <input type="url" class="url-foto" value="${url}" required>
-                <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
-            `;
-            contenedorUrls.appendChild(div);
-            
-            div.querySelector('.btn-eliminar-url').addEventListener('click', () => {
-                if (document.querySelectorAll('.url-entry').length > 1) {
-                    contenedorUrls.removeChild(div);
-                } else {
-                    alert('Debe mantener al menos una URL');
-                }
+        if (producto.fotos && producto.fotos.length > 0) {
+            producto.fotos.forEach((url) => {
+                const div = document.createElement('div');
+                div.classList.add('url-entry');
+                div.innerHTML = `
+                    <input type="url" class="url-foto" value="${url}" required>
+                    <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
+                `;
+                contenedorUrls.appendChild(div);
+                
+                div.querySelector('.btn-eliminar-url').addEventListener('click', () => {
+                    if (document.querySelectorAll('.url-entry').length > 1) {
+                        contenedorUrls.removeChild(div);
+                    } else {
+                        alert('Debe mantener al menos una URL');
+                    }
+                });
             });
-        });
+        }
         
-        // Marcar categorías
         await cargarCategoriasEnCheckboxes();
         setTimeout(() => {
             document.querySelectorAll('.checkbox-categoria').forEach(cb => {
                 cb.checked = producto.categorias && producto.categorias.includes(cb.value);
             });
-        }, 500);
+        }, 300);
         
         tituloFormProducto.textContent = 'Editar Producto';
         btnCancelarEdicion.style.display = 'inline-block';
         
-        // Scroll al formulario
         document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
         
     } catch (error) {
@@ -381,7 +479,7 @@ async function editarProducto(id) {
 // ELIMINAR PRODUCTO
 // =============================================
 async function eliminarProducto(id) {
-    if (confirm('¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.')) {
+    if (confirm('¿Estás seguro de ELIMINAR PERMANENTEMENTE este producto? Esta acción no se puede deshacer.')) {
         try {
             await db.collection('productos').doc(id).delete();
             alert('✅ Producto eliminado');
@@ -477,7 +575,7 @@ function editarCategoria(id, nombre) {
 }
 
 async function eliminarCategoria(id) {
-    if (confirm('¿Estás seguro de eliminar esta categoría? Los productos que la usan no se eliminarán.')) {
+    if (confirm('¿Estás seguro de eliminar esta categoría?')) {
         try {
             await db.collection('categorias').doc(id).delete();
             alert('✅ Categoría eliminada');
