@@ -1,5 +1,5 @@
 /* ============================================= */
-/* OMNI SV - ESTILOS CON MODO OSCURO/CLARO       */
+/* OMNI SV - ESTILOS COMPLETOS                   */
 /* ============================================= */
 
 :root {
@@ -15,7 +15,7 @@
     --transicion: all 0.3s ease;
 }
 
-/* TEMA CLARO (default) */
+/* TEMA CLARO */
 [data-theme="light"] {
     --bg-principal: #f0f2f5;
     --bg-secundario: #ffffff;
@@ -130,12 +130,6 @@ header {
     transition: var(--transicion);
 }
 
-.barra-superior input:focus,
-.barra-superior select:focus {
-    border-color: var(--color-secundario);
-    box-shadow: 0 0 0 3px rgba(233,69,96,0.2);
-}
-
 .barra-superior input {
     flex: 1;
     min-width: 220px;
@@ -144,6 +138,12 @@ header {
 .barra-superior select {
     cursor: pointer;
     min-width: 150px;
+}
+
+.barra-superior input:focus,
+.barra-superior select:focus {
+    border-color: var(--color-secundario);
+    box-shadow: 0 0 0 3px rgba(233,69,96,0.2);
 }
 
 .btn-pdf {
@@ -186,7 +186,7 @@ main {
 }
 
 /* ============================================= */
-/* TARJETA DE PRODUCTO                            */
+/* TARJETA DE PRODUCTO - IMÁGENES ADAPTABLES      */
 /* ============================================= */
 .producto-card {
     background: var(--bg-secundario);
@@ -196,6 +196,7 @@ main {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .producto-card:hover {
@@ -205,14 +206,24 @@ main {
 
 .galeria {
     position: relative;
+    width: 100%;
+    background: var(--bg-terciario);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    max-height: 400px;
     overflow: hidden;
 }
 
 .foto-principal {
     width: 100%;
-    height: 280px;
-    object-fit: cover;
+    height: auto;
+    max-height: 350px;
+    object-fit: contain;
     display: block;
+    background: var(--bg-terciario);
+    transition: transform 0.3s ease;
 }
 
 .miniaturas {
@@ -237,6 +248,7 @@ main {
 
 .miniatura:hover {
     border-color: var(--color-secundario);
+    transform: scale(1.1);
 }
 
 .miniatura.activa {
@@ -320,6 +332,37 @@ main {
 
 .whatsapp-link:hover {
     text-decoration: underline;
+}
+
+/* ============================================= */
+/* PRODUCTO INHABILITADO                          */
+/* ============================================= */
+.producto-card.inhabilitado {
+    opacity: 0.6;
+    position: relative;
+}
+
+.producto-card.inhabilitado::after {
+    content: "NO DISPONIBLE";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    padding: 8px 20px;
+    font-size: 1.2em;
+    font-weight: 800;
+    letter-spacing: 2px;
+    border-radius: 8px;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.producto-card.inhabilitado .btn-whatsapp {
+    background: #999;
+    pointer-events: none;
+    cursor: not-allowed;
 }
 
 /* ============================================= */
@@ -560,12 +603,6 @@ footer h4 {
     gap: 30px;
 }
 
-@media (max-width: 900px) {
-    .admin-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
 /* Formularios */
 .form-container,
 .lista-container {
@@ -623,7 +660,7 @@ footer h4 {
     gap: 16px;
 }
 
-/* Checkboxes de categorías */
+/* Checkboxes */
 .checkboxes-container {
     max-height: 200px;
     overflow-y: auto;
@@ -742,6 +779,28 @@ footer h4 {
     background: var(--borde);
 }
 
+/* Barra de búsqueda admin */
+.barra-busqueda-admin {
+    margin-bottom: 20px;
+}
+
+.barra-busqueda-admin input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--borde-input);
+    border-radius: 50px;
+    font-size: 15px;
+    background: var(--bg-input);
+    color: var(--texto-input);
+    transition: var(--transicion);
+}
+
+.barra-busqueda-admin input:focus {
+    outline: none;
+    border-color: var(--color-secundario);
+    box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+}
+
 /* Lista de productos admin */
 #listaProductosAdmin,
 #listaCategoriasAdmin {
@@ -770,8 +829,9 @@ footer h4 {
 .thumb-admin {
     width: 70px;
     height: 70px;
-    object-fit: cover;
+    object-fit: contain;
     border-radius: 10px;
+    background: var(--bg-terciario);
 }
 
 .info-admin,
@@ -792,11 +852,42 @@ footer h4 {
     color: var(--texto-secundario);
 }
 
-.acciones-admin {
-    display: flex;
-    gap: 8px;
+.estado-producto {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 600;
+    margin-top: 4px;
 }
 
+.estado-activo {
+    background: #d4edda;
+    color: #155724;
+}
+
+.estado-inactivo {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+[data-theme="dark"] .estado-activo {
+    background: #1a3a2a;
+    color: #4caf84;
+}
+
+[data-theme="dark"] .estado-inactivo {
+    background: #3a1a1a;
+    color: #e07070;
+}
+
+.acciones-admin {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.btn-toggle,
 .btn-editar,
 .btn-eliminar {
     background: none;
@@ -806,6 +897,10 @@ footer h4 {
     padding: 8px;
     border-radius: 8px;
     transition: var(--transicion);
+}
+
+.btn-toggle:hover {
+    background: rgba(241,196,15,0.2);
 }
 
 .btn-editar:hover {
@@ -921,12 +1016,16 @@ footer h4 {
     width: 100%;
     height: 200px;
     overflow: hidden;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .pdf-img-container img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .pdf-info {
@@ -977,6 +1076,12 @@ footer h4 {
 /* ============================================= */
 /* RESPONSIVE                                     */
 /* ============================================= */
+@media (max-width: 900px) {
+    .admin-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 @media (max-width: 768px) {
     header { padding: 16px 12px; }
     .header-top h1 { font-size: 1.5em; }
@@ -985,8 +1090,7 @@ footer h4 {
     .barra-superior select,
     .btn-pdf { width: 100%; }
     main { grid-template-columns: 1fr; margin: 20px auto; padding: 0 12px; gap: 16px; }
-    .foto-principal { height: 240px; }
-    .admin-grid { grid-template-columns: 1fr; }
+    .foto-principal { max-height: 280px; }
     .form-row { grid-template-columns: 1fr; }
     .admin-tabs { overflow-x: auto; }
     .tab-btn { padding: 12px 16px; font-size: 14px; }
@@ -996,9 +1100,13 @@ footer h4 {
     .productos-grid-pdf { grid-template-columns: 1fr; }
 }
 
+/* ============================================= */
+/* IMPRESIÓN                                      */
+/* ============================================= */
 @media print {
     .no-print { display: none !important; }
     .pdf-body { background: white; padding: 0; }
     .pdf-container { box-shadow: none; max-width: 100%; }
+    .producto-pdf-item { break-inside: avoid; page-break-inside: avoid; }
     @page { margin: 1cm; }
 }
