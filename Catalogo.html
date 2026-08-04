@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CATÁLOGO | OmniSV</title>
+    <link rel="stylesheet" href="css/estilo.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛍️</text></svg>">
+</head>
+<body>
+    <!-- Encabezado principal -->
+    <header>
+        <div class="header-top">
+            <h1>CATÁLOGO <span>OmniSV</span></h1>
+        </div>
+        <div class="barra-superior">
+            <input type="text" id="buscador" placeholder="🔍 Buscar productos...">
+            <select id="filtroCategoria">
+                <option value="todas">Todas las categorías</option>
+                <option value="dama">Dama</option>
+                <option value="belleza">Belleza</option>
+                <option value="tecnologia">Tecnología</option>
+                <option value="cocina">Cocina</option>
+            </select>
+            <a href="pdf.html" class="btn-pdf" target="_blank">📄 Ver Catálogo Completo</a>
+        </div>
+    </header>
+
+    <!-- Contenedor principal de productos -->
+    <main id="contenedorProductos">
+        <div class="cargando">
+            <p>Cargando productos...</p>
+        </div>
+    </main>
+
+    <!-- Términos y condiciones -->
+    <footer>
+        <div id="terminosCondiciones"></div>
+        <div class="footer-info">
+            <p><strong>OmniSV</strong> | 📱 WhatsApp: +503 7131-2121</p>
+        </div>
+    </footer>
+
+    <!-- Firebase SDKs (versión compat para CDN) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Scripts personalizados -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/catalogo.js"></script>
+</body>
+</html>
