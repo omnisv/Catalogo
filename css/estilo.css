@@ -1,25 +1,12 @@
-Perfecto, aquí tienes el CSS completo y detallado para tu proyecto OmniSV. Este archivo cubre absolutamente todos los estilos necesarios: catálogo público, panel de administración, vista PDF, y todos los componentes interactivos.
-
----
-
-📁 Archivo: css/estilo.css
-
-```css
 /* ============================================= */
-/* ESTILOS GENERALES - OMNI SV                   */
+/* OMNI SV - ESTILOS CON MODO OSCURO/CLARO       */
 /* ============================================= */
 
-/* Variables de colores y sombras */
 :root {
     --color-principal: #1a1a2e;
     --color-secundario: #e94560;
     --color-whatsapp: #25D366;
     --color-whatsapp-hover: #1da851;
-    --color-fondo: #f0f2f5;
-    --color-blanco: #ffffff;
-    --color-texto: #333333;
-    --color-texto-claro: #666666;
-    --color-borde: #e0e0e0;
     --sombra-suave: 0 2px 8px rgba(0,0,0,0.08);
     --sombra-media: 0 4px 16px rgba(0,0,0,0.12);
     --sombra-fuerte: 0 8px 32px rgba(0,0,0,0.16);
@@ -28,7 +15,36 @@ Perfecto, aquí tienes el CSS completo y detallado para tu proyecto OmniSV. Este
     --transicion: all 0.3s ease;
 }
 
-/* Reset y estilos base */
+/* TEMA CLARO (default) */
+[data-theme="light"] {
+    --bg-principal: #f0f2f5;
+    --bg-secundario: #ffffff;
+    --bg-terciario: #f8f9fa;
+    --texto-principal: #333333;
+    --texto-secundario: #666666;
+    --texto-terciario: #999999;
+    --borde: #e0e0e0;
+    --borde-input: #e0e0e0;
+    --bg-input: #ffffff;
+    --texto-input: #333333;
+    --bg-hover: #fafafa;
+}
+
+/* TEMA OSCURO */
+[data-theme="dark"] {
+    --bg-principal: #0f0f1a;
+    --bg-secundario: #1a1a2e;
+    --bg-terciario: #252540;
+    --texto-principal: #e8e8e8;
+    --texto-secundario: #b0b0b0;
+    --texto-terciario: #808080;
+    --borde: #333350;
+    --borde-input: #444460;
+    --bg-input: #252540;
+    --texto-input: #e8e8e8;
+    --bg-hover: #2a2a45;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -37,14 +53,15 @@ Perfecto, aquí tienes el CSS completo y detallado para tu proyecto OmniSV. Este
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--color-fondo);
-    color: var(--color-texto);
+    background-color: var(--bg-principal);
+    color: var(--texto-principal);
     line-height: 1.6;
     min-height: 100vh;
+    transition: background-color 0.3s, color 0.3s;
 }
 
 /* ============================================= */
-/* HEADER DEL CATÁLOGO PÚBLICO                   */
+/* HEADER                                         */
 /* ============================================= */
 header {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -53,23 +70,43 @@ header {
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .header-top {
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     margin-bottom: 20px;
+    position: relative;
 }
 
 .header-top h1 {
     font-size: 2em;
     font-weight: 700;
-    letter-spacing: 1px;
 }
 
 .header-top h1 span {
     color: var(--color-secundario);
-    font-weight: 800;
+}
+
+.btn-tema {
+    position: absolute;
+    right: 0;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    transition: var(--transicion);
+}
+
+.btn-tema:hover {
+    background: rgba(255,255,255,0.25);
+    transform: rotate(20deg);
 }
 
 .barra-superior {
@@ -93,15 +130,15 @@ header {
     transition: var(--transicion);
 }
 
-.barra-superior input {
-    flex: 1;
-    min-width: 220px;
-}
-
 .barra-superior input:focus,
 .barra-superior select:focus {
     border-color: var(--color-secundario);
     box-shadow: 0 0 0 3px rgba(233,69,96,0.2);
+}
+
+.barra-superior input {
+    flex: 1;
+    min-width: 220px;
 }
 
 .barra-superior select {
@@ -118,7 +155,6 @@ header {
     font-weight: 600;
     white-space: nowrap;
     transition: var(--transicion);
-    display: inline-block;
 }
 
 .btn-pdf:hover {
@@ -128,7 +164,7 @@ header {
 }
 
 /* ============================================= */
-/* CONTENEDOR PRINCIPAL DE PRODUCTOS (GRID)      */
+/* CONTENEDOR PRINCIPAL                           */
 /* ============================================= */
 main {
     max-width: 1300px;
@@ -146,22 +182,14 @@ main {
     text-align: center;
     padding: 60px 20px;
     font-size: 1.1em;
-    color: var(--color-texto-claro);
-}
-
-.sin-resultados p {
-    font-size: 1.2em;
-}
-
-.error {
-    color: #c0392b;
+    color: var(--texto-secundario);
 }
 
 /* ============================================= */
-/* TARJETA DE PRODUCTO                           */
+/* TARJETA DE PRODUCTO                            */
 /* ============================================= */
 .producto-card {
-    background: var(--color-blanco);
+    background: var(--bg-secundario);
     border-radius: var(--radio-borde-grande);
     overflow: hidden;
     box-shadow: var(--sombra-suave);
@@ -175,7 +203,6 @@ main {
     box-shadow: var(--sombra-fuerte);
 }
 
-/* Galería de imágenes */
 .galeria {
     position: relative;
     overflow: hidden;
@@ -186,29 +213,15 @@ main {
     height: 280px;
     object-fit: cover;
     display: block;
-    transition: transform 0.5s ease;
-}
-
-.producto-card:hover .foto-principal {
-    transform: scale(1.05);
 }
 
 .miniaturas {
     display: flex;
     gap: 8px;
     padding: 12px;
-    background: #f8f9fa;
+    background: var(--bg-terciario);
     overflow-x: auto;
-    border-top: 1px solid var(--color-borde);
-}
-
-.miniaturas::-webkit-scrollbar {
-    height: 4px;
-}
-
-.miniaturas::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 4px;
+    border-top: 1px solid var(--borde);
 }
 
 .miniatura {
@@ -224,7 +237,6 @@ main {
 
 .miniatura:hover {
     border-color: var(--color-secundario);
-    transform: scale(1.1);
 }
 
 .miniatura.activa {
@@ -232,12 +244,18 @@ main {
     box-shadow: 0 0 0 3px rgba(233,69,96,0.3);
 }
 
-/* Información del producto */
 .info-producto {
     padding: 20px;
     display: flex;
     flex-direction: column;
     flex: 1;
+}
+
+.categorias-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
 }
 
 .categoria-badge {
@@ -250,15 +268,13 @@ main {
     text-transform: uppercase;
     font-weight: 600;
     letter-spacing: 0.5px;
-    align-self: flex-start;
-    margin-bottom: 12px;
 }
 
 .info-producto h3 {
     font-size: 1.25em;
     font-weight: 700;
     margin-bottom: 6px;
-    color: var(--color-principal);
+    color: var(--texto-principal);
 }
 
 .precio {
@@ -269,7 +285,7 @@ main {
 }
 
 .descripcion {
-    color: var(--color-texto-claro);
+    color: var(--texto-secundario);
     font-size: 0.93em;
     margin-bottom: 16px;
     line-height: 1.5;
@@ -296,27 +312,36 @@ main {
     box-shadow: 0 4px 12px rgba(37,211,102,0.4);
 }
 
+.whatsapp-link {
+    color: var(--color-whatsapp);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.whatsapp-link:hover {
+    text-decoration: underline;
+}
+
 /* ============================================= */
-/* FOOTER - TÉRMINOS Y CONDICIONES               */
+/* FOOTER                                         */
 /* ============================================= */
 footer {
     max-width: 1300px;
     margin: 30px auto;
     padding: 24px 20px;
-    background: var(--color-blanco);
+    background: var(--bg-secundario);
     border-radius: var(--radio-borde-grande);
     box-shadow: var(--sombra-suave);
 }
 
 footer h4 {
-    color: var(--color-principal);
+    color: var(--texto-principal);
     margin-bottom: 12px;
-    font-size: 1.1em;
 }
 
 .terminos-texto {
     font-size: 0.9em;
-    color: var(--color-texto-claro);
+    color: var(--texto-secundario);
     line-height: 1.7;
 }
 
@@ -324,13 +349,13 @@ footer h4 {
     text-align: center;
     margin-top: 20px;
     padding-top: 20px;
-    border-top: 1px solid var(--color-borde);
+    border-top: 1px solid var(--borde);
     font-size: 0.9em;
-    color: var(--color-texto-claro);
+    color: var(--texto-secundario);
 }
 
 /* ============================================= */
-/* PÁGINA DE LOGIN - ADMIN                      */
+/* LOGIN ADMIN                                    */
 /* ============================================= */
 .admin-body {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -347,7 +372,7 @@ footer h4 {
 }
 
 .login-container {
-    background: var(--color-blanco);
+    background: var(--bg-secundario);
     border-radius: var(--radio-borde-grande);
     padding: 40px 30px;
     box-shadow: var(--sombra-fuerte);
@@ -365,8 +390,7 @@ footer h4 {
 }
 
 .login-header p {
-    color: var(--color-texto-claro);
-    font-size: 0.95em;
+    color: var(--texto-secundario);
 }
 
 .input-group {
@@ -377,23 +401,43 @@ footer h4 {
     display: block;
     margin-bottom: 6px;
     font-weight: 600;
-    color: var(--color-principal);
+    color: var(--texto-principal);
     font-size: 0.9em;
 }
 
 .input-group input {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid var(--color-borde);
+    border: 2px solid var(--borde-input);
     border-radius: 10px;
     font-size: 15px;
+    background: var(--bg-input);
+    color: var(--texto-input);
     transition: var(--transicion);
 }
 
 .input-group input:focus {
     outline: none;
     border-color: var(--color-secundario);
-    box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+}
+
+.input-group-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.input-group-checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-secundario);
+}
+
+.input-group-checkbox label {
+    color: var(--texto-principal);
+    font-size: 0.9em;
+    cursor: pointer;
 }
 
 .btn-login {
@@ -423,29 +467,33 @@ footer h4 {
     border-radius: 8px;
     color: #c0392b;
     font-size: 0.9em;
-    font-weight: 500;
 }
 
 /* ============================================= */
-/* PANEL DE ADMINISTRACIÓN                      */
+/* PANEL ADMIN                                    */
 /* ============================================= */
 #panelAdmin {
-    background: var(--color-fondo);
+    background: var(--bg-principal);
     min-height: 100vh;
 }
 
 .admin-header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
     color: white;
-    padding: 20px 24px;
+    padding: 16px 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .admin-header h1 {
     font-size: 1.5em;
+}
+
+.admin-header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .btn-cerrar {
@@ -463,12 +511,13 @@ footer h4 {
     background: rgba(255,255,255,0.25);
 }
 
-/* Pestañas de administración */
+/* Pestañas */
 .admin-tabs {
     display: flex;
-    background: var(--color-blanco);
-    border-bottom: 1px solid var(--color-borde);
+    background: var(--bg-secundario);
+    border-bottom: 1px solid var(--borde);
     padding: 0 20px;
+    overflow-x: auto;
 }
 
 .tab-btn {
@@ -479,12 +528,13 @@ footer h4 {
     cursor: pointer;
     font-size: 15px;
     font-weight: 600;
-    color: var(--color-texto-claro);
+    color: var(--texto-secundario);
     transition: var(--transicion);
+    white-space: nowrap;
 }
 
 .tab-btn:hover {
-    color: var(--color-principal);
+    color: var(--texto-principal);
 }
 
 .tab-btn.active {
@@ -503,7 +553,7 @@ footer h4 {
     display: block;
 }
 
-/* Grid del panel admin */
+/* Grid admin */
 .admin-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -516,10 +566,10 @@ footer h4 {
     }
 }
 
-/* Formularios del admin */
+/* Formularios */
 .form-container,
 .lista-container {
-    background: var(--color-blanco);
+    background: var(--bg-secundario);
     border-radius: var(--radio-borde-grande);
     padding: 24px;
     box-shadow: var(--sombra-suave);
@@ -529,7 +579,7 @@ footer h4 {
 .lista-container h2,
 #seccionTerminos h2 {
     margin-bottom: 20px;
-    color: var(--color-principal);
+    color: var(--texto-principal);
     font-size: 1.3em;
 }
 
@@ -541,7 +591,7 @@ footer h4 {
     display: block;
     margin-bottom: 6px;
     font-weight: 600;
-    color: var(--color-principal);
+    color: var(--texto-principal);
     font-size: 0.9em;
 }
 
@@ -550,10 +600,12 @@ footer h4 {
 .form-group textarea {
     width: 100%;
     padding: 10px 14px;
-    border: 2px solid var(--color-borde);
+    border: 2px solid var(--borde-input);
     border-radius: 10px;
     font-size: 15px;
     font-family: inherit;
+    background: var(--bg-input);
+    color: var(--texto-input);
     transition: var(--transicion);
 }
 
@@ -569,6 +621,41 @@ footer h4 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
+}
+
+/* Checkboxes de categorías */
+.checkboxes-container {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 2px solid var(--borde-input);
+    border-radius: 10px;
+    padding: 12px;
+    background: var(--bg-input);
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.checkbox-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--color-secundario);
+}
+
+.checkbox-item label {
+    color: var(--texto-input);
+    cursor: pointer;
+    font-size: 0.95em;
+}
+
+.cargando-categorias,
+.info-text {
+    color: var(--texto-secundario);
+    font-size: 0.9em;
 }
 
 /* URLs de fotos */
@@ -594,12 +681,10 @@ footer h4 {
     font-size: 16px;
     font-weight: bold;
     transition: var(--transicion);
-    flex-shrink: 0;
 }
 
 .btn-eliminar-url:hover {
     background: #c0392b;
-    transform: scale(1.1);
 }
 
 .btn-agregar {
@@ -615,11 +700,17 @@ footer h4 {
 }
 
 .btn-agregar:hover {
-    background: rgba(233,69,96,0.08);
+    background: rgba(233,69,96,0.1);
+}
+
+.form-botones {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
 }
 
 .btn-guardar {
-    width: 100%;
+    flex: 1;
     padding: 14px;
     background: linear-gradient(135deg, #27ae60, #2ecc71);
     color: white;
@@ -629,7 +720,6 @@ footer h4 {
     font-weight: 700;
     cursor: pointer;
     transition: var(--transicion);
-    margin-top: 10px;
 }
 
 .btn-guardar:hover {
@@ -637,26 +727,44 @@ footer h4 {
     box-shadow: 0 6px 20px rgba(39,174,96,0.3);
 }
 
+.btn-cancelar {
+    padding: 14px 20px;
+    background: var(--bg-terciario);
+    color: var(--texto-principal);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: var(--transicion);
+}
+
+.btn-cancelar:hover {
+    background: var(--borde);
+}
+
 /* Lista de productos admin */
-#listaProductosAdmin {
+#listaProductosAdmin,
+#listaCategoriasAdmin {
     max-height: 600px;
     overflow-y: auto;
 }
 
-.producto-admin-item {
+.producto-admin-item,
+.categoria-admin-item {
     display: flex;
     align-items: center;
     gap: 14px;
     padding: 14px;
-    border: 1px solid var(--color-borde);
+    border: 1px solid var(--borde);
     border-radius: 12px;
     margin-bottom: 12px;
+    background: var(--bg-secundario);
     transition: var(--transicion);
 }
 
-.producto-admin-item:hover {
-    background: #fafafa;
-    border-color: #ccc;
+.producto-admin-item:hover,
+.categoria-admin-item:hover {
+    background: var(--bg-hover);
 }
 
 .thumb-admin {
@@ -664,80 +772,58 @@ footer h4 {
     height: 70px;
     object-fit: cover;
     border-radius: 10px;
-    flex-shrink: 0;
 }
 
-.info-admin {
+.info-admin,
+.info-categoria {
     flex: 1;
 }
 
-.info-admin strong {
+.info-admin strong,
+.info-categoria strong {
     display: block;
-    font-size: 0.95em;
-    color: var(--color-principal);
+    color: var(--texto-principal);
 }
 
-.info-admin span {
-    font-size: 0.85em;
-    color: var(--color-texto-claro);
-}
-
+.info-admin span,
 .info-admin small {
     display: block;
-    font-size: 0.78em;
-    color: #999;
-    margin-top: 2px;
+    font-size: 0.85em;
+    color: var(--texto-secundario);
 }
 
+.acciones-admin {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-editar,
 .btn-eliminar {
-    background: #ffeaea;
+    background: none;
     border: none;
     font-size: 20px;
     cursor: pointer;
     padding: 8px;
     border-radius: 8px;
     transition: var(--transicion);
-    flex-shrink: 0;
+}
+
+.btn-editar:hover {
+    background: rgba(52,152,219,0.15);
 }
 
 .btn-eliminar:hover {
-    background: #ffcccc;
-    transform: scale(1.1);
+    background: rgba(231,76,60,0.15);
 }
 
 .vacio {
     text-align: center;
-    color: var(--color-texto-claro);
+    color: var(--texto-secundario);
     padding: 40px;
-    font-size: 1.05em;
-}
-
-/* Sección términos admin */
-#seccionTerminos textarea {
-    width: 100%;
-    padding: 16px;
-    border: 2px solid var(--color-borde);
-    border-radius: 12px;
-    font-family: inherit;
-    font-size: 15px;
-    resize: vertical;
-    transition: var(--transicion);
-}
-
-#seccionTerminos textarea:focus {
-    outline: none;
-    border-color: var(--color-secundario);
-    box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
-}
-
-.info-text {
-    color: var(--color-texto-claro);
-    font-size: 0.9em;
-    margin-bottom: 16px;
 }
 
 /* ============================================= */
-/* VISTA PDF - CATÁLOGO COMPLETO                 */
+/* PDF                                            */
 /* ============================================= */
 .pdf-body {
     background: #e8e8e8;
@@ -773,15 +859,15 @@ footer h4 {
     margin-bottom: 10px;
 }
 
-.fecha-actualizacion {
+.fecha-actualizacion,
+.contacto-header {
     font-size: 0.9em;
-    opacity: 0.8;
+    opacity: 0.9;
 }
 
-.contacto-header {
-    font-size: 0.95em;
-    margin-top: 6px;
-    opacity: 0.9;
+.contacto-header a {
+    color: var(--color-whatsapp);
+    text-decoration: none;
 }
 
 .btn-imprimir {
@@ -802,7 +888,6 @@ footer h4 {
     background: rgba(255,255,255,0.3);
 }
 
-/* Contenido del catálogo PDF */
 #catalogoPdf {
     padding: 40px 30px;
 }
@@ -813,11 +898,10 @@ footer h4 {
 
 .categoria-titulo {
     font-size: 1.4em;
-    color: var(--color-principal);
+    color: #1a1a2e;
     border-bottom: 3px solid var(--color-secundario);
     padding-bottom: 8px;
     margin-bottom: 20px;
-    letter-spacing: 1px;
 }
 
 .productos-grid-pdf {
@@ -827,7 +911,7 @@ footer h4 {
 }
 
 .producto-pdf-item {
-    border: 1px solid var(--color-borde);
+    border: 1px solid #e0e0e0;
     border-radius: 10px;
     overflow: hidden;
     page-break-inside: avoid;
@@ -851,18 +935,17 @@ footer h4 {
 
 .pdf-info h3 {
     font-size: 1.1em;
-    color: var(--color-principal);
+    color: #333;
     margin-bottom: 4px;
 }
 
 .pdf-info .precio {
     font-size: 1.3em;
-    margin-bottom: 6px;
 }
 
 .descripcion-pdf {
     font-size: 0.88em;
-    color: var(--color-texto-claro);
+    color: #666;
     line-height: 1.5;
 }
 
@@ -872,173 +955,50 @@ footer h4 {
     margin-top: 8px;
 }
 
-/* Footer PDF */
 .pdf-footer {
     background: #f8f9fa;
     padding: 24px 30px;
-    border-top: 1px solid var(--color-borde);
-}
-
-.pdf-footer h4 {
-    color: var(--color-principal);
-    margin-bottom: 8px;
+    border-top: 1px solid #e0e0e0;
 }
 
 .footer-contacto {
     text-align: center;
     margin-top: 20px;
     padding-top: 16px;
-    border-top: 1px solid var(--color-borde);
+    border-top: 1px solid #e0e0e0;
     font-size: 0.9em;
-    color: var(--color-texto-claro);
 }
 
 .derechos {
     font-size: 0.82em;
-    margin-top: 4px;
     color: #999;
 }
 
 /* ============================================= */
-/* UTILIDADES PARA IMPRESIÓN                     */
-/* ============================================= */
-@media print {
-    .no-print {
-        display: none !important;
-    }
-    
-    .pdf-body {
-        background: white;
-        padding: 0;
-    }
-    
-    .pdf-container {
-        box-shadow: none;
-        max-width: 100%;
-    }
-    
-    .pdf-header {
-        background: #1a1a2e !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    
-    .producto-pdf-item {
-        break-inside: avoid;
-        page-break-inside: avoid;
-    }
-    
-    @page {
-        margin: 1cm;
-    }
-}
-
-/* ============================================= */
-/* RESPONSIVE - MÓVILES                         */
+/* RESPONSIVE                                     */
 /* ============================================= */
 @media (max-width: 768px) {
-    header {
-        padding: 16px 12px;
-    }
-    
-    .header-top h1 {
-        font-size: 1.5em;
-    }
-    
-    .barra-superior {
-        flex-direction: column;
-        gap: 8px;
-    }
-    
+    header { padding: 16px 12px; }
+    .header-top h1 { font-size: 1.5em; }
+    .barra-superior { flex-direction: column; }
     .barra-superior input,
     .barra-superior select,
-    .btn-pdf {
-        width: 100%;
-    }
-    
-    main {
-        grid-template-columns: 1fr;
-        margin: 20px auto;
-        padding: 0 12px;
-        gap: 16px;
-    }
-    
-    .foto-principal {
-        height: 240px;
-    }
-    
-    .admin-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .form-row {
-        grid-template-columns: 1fr;
-    }
-    
-    .admin-tabs {
-        overflow-x: auto;
-    }
-    
-    .tab-btn {
-        padding: 12px 16px;
-        font-size: 14px;
-        white-space: nowrap;
-    }
-    
-    .tab-content {
-        padding: 20px 12px;
-    }
-    
-    .pdf-container {
-        margin: 0 -12px;
-        border-radius: 0;
-    }
-    
-    #catalogoPdf {
-        padding: 20px 16px;
-    }
-    
-    .productos-grid-pdf {
-        grid-template-columns: 1fr;
-    }
+    .btn-pdf { width: 100%; }
+    main { grid-template-columns: 1fr; margin: 20px auto; padding: 0 12px; gap: 16px; }
+    .foto-principal { height: 240px; }
+    .admin-grid { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+    .admin-tabs { overflow-x: auto; }
+    .tab-btn { padding: 12px 16px; font-size: 14px; }
+    .tab-content { padding: 20px 12px; }
+    .pdf-container { margin: 0 -12px; border-radius: 0; }
+    #catalogoPdf { padding: 20px 16px; }
+    .productos-grid-pdf { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 480px) {
-    .foto-principal {
-        height: 200px;
-    }
-    
-    .producto-card {
-        border-radius: 14px;
-    }
-    
-    .btn-whatsapp {
-        font-size: 0.9em;
-        padding: 10px;
-    }
-    
-    .login-container {
-        padding: 24px 18px;
-    }
+@media print {
+    .no-print { display: none !important; }
+    .pdf-body { background: white; padding: 0; }
+    .pdf-container { box-shadow: none; max-width: 100%; }
+    @page { margin: 1cm; }
 }
-```
-
----
-
-✅ Resumen de lo que incluye este CSS
-
-Componente Descripción
-Variables CSS Colores, sombras, bordes reutilizables
-Header Gradiente oscuro con barra de búsqueda y filtros
-Grid de productos Responsive con auto-fill
-Tarjetas de producto Con hover, galería, miniaturas, badge de categoría
-WhatsApp button Verde con efecto hover
-Login admin Pantalla completa centrada con gradiente
-Panel admin Pestañas, formularios, lista de productos
-Vista PDF Diseño imprimible con estilos de impresión
-Responsive Adaptado a móviles y tablets
-Utilidades de impresión Oculta botones al imprimir
-
----
-
-¿Quieres que te explique cómo subir todo esto a GitHub paso a paso o prefieres que ajustemos algún estilo en particular?
