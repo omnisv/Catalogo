@@ -9,9 +9,7 @@
 </head>
 <body class="admin-body">
     
-    <!-- ========================================== -->
-    <!-- PANTALLA DE LOGIN                          -->
-    <!-- ========================================== -->
+    <!-- PANTALLA DE LOGIN -->
     <div id="pantallaLogin">
         <div class="login-container">
             <div class="login-header">
@@ -37,9 +35,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- PANEL DE ADMINISTRACIÓN                   -->
-    <!-- ========================================== -->
+    <!-- PANEL DE ADMINISTRACIÓN -->
     <div id="panelAdmin" style="display:none;">
         <header class="admin-header">
             <h1>OmniSV Admin</h1>
@@ -55,12 +51,9 @@
             <button class="tab-btn" data-tab="terminos">📋 Términos</button>
         </div>
 
-        <!-- ========================================== -->
-        <!-- SECCIÓN PRODUCTOS                         -->
-        <!-- ========================================== -->
+        <!-- SECCIÓN PRODUCTOS -->
         <div id="seccionProductos" class="tab-content active">
             <div class="admin-grid">
-                <!-- Formulario -->
                 <div class="form-container">
                     <h2 id="tituloFormProducto">Agregar Producto</h2>
                     <form id="formProducto">
@@ -107,9 +100,11 @@
                     </form>
                 </div>
 
-                <!-- Lista de productos -->
                 <div class="lista-container">
                     <h2>Productos Existentes</h2>
+                    <div class="barra-busqueda-admin">
+                        <input type="text" id="buscadorAdmin" placeholder="🔍 Buscar producto por nombre, categoría...">
+                    </div>
                     <div id="listaProductosAdmin">
                         <p>Cargando productos...</p>
                     </div>
@@ -117,9 +112,7 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- SECCIÓN CATEGORÍAS                        -->
-        <!-- ========================================== -->
+        <!-- SECCIÓN CATEGORÍAS -->
         <div id="seccionCategorias" class="tab-content">
             <div class="admin-grid">
                 <div class="form-container">
@@ -146,9 +139,7 @@
             </div>
         </div>
 
-        <!-- ========================================== -->
-        <!-- SECCIÓN TÉRMINOS                          -->
-        <!-- ========================================== -->
+        <!-- SECCIÓN TÉRMINOS -->
         <div id="seccionTerminos" class="tab-content">
             <h2>Editar Términos y Condiciones</h2>
             <p class="info-text">Estos términos se mostrarán al final del catálogo público.</p>
@@ -157,11 +148,8 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/admin.js"></script>
 </body>
