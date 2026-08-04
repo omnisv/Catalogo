@@ -24,7 +24,7 @@ async function cargarCategorias() {
 }
 
 // =============================================
-// CARGAR CATÁLOGO
+// CARGAR CATÁLOGO (solo activos)
 // =============================================
 async function cargarCatalogoCompleto() {
     try {
@@ -35,11 +35,14 @@ async function cargarCatalogoCompleto() {
             return;
         }
         
-        // Agrupar por categoría
         const productosPorCategoria = {};
         
         snapshot.forEach(doc => {
             const producto = doc.data();
+            
+            // Solo incluir productos activos
+            if (producto.activo === false) return;
+            
             const cats = producto.categorias || ['sin-categoria'];
             
             cats.forEach(catId => {
@@ -47,7 +50,6 @@ async function cargarCatalogoCompleto() {
                 if (!productosPorCategoria[catNombre]) {
                     productosPorCategoria[catNombre] = [];
                 }
-                // Evitar duplicados si el producto tiene múltiples categorías
                 if (!productosPorCategoria[catNombre].find(p => p.nombre === producto.nombre)) {
                     productosPorCategoria[catNombre].push(producto);
                 }
@@ -67,7 +69,10 @@ async function cargarCatalogoCompleto() {
                 html += `
                     <div class="producto-pdf-item">
                         <div class="pdf-img-container">
-                            <img src="${producto.fotos[0]}" alt="${producto.nombre}" onerror="this.src='https://via.placeholder.com/300x200?text=Sin+Imagen'">
+                            <img src="${producto.fotos[0]}" 
+                                 alt="${producto.nombre}" 
+                                 style="object-fit: contain; background: #f5f5f5;"
+                                 onerror="this.src='https://via.placeholder.com/300x200?text=Sin+Imagen'">
                         </div>
                         <div class="pdf-info">
                             <h3>${producto.nombre}</h3>
@@ -81,7 +86,7 @@ async function cargarCatalogoCompleto() {
             html += '</div></div>';
         }
         
-        catalogoPdf.innerHTML = html;
+        catalogoPdf.innerHTML = html || '<p class="vacio">No hay productos activos.</p>';
     } catch (error) {
         console.error('Error:', error);
         catalogoPdf.innerHTML = '<p class="error">Error al cargar.</p>';
