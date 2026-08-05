@@ -7,12 +7,8 @@ const ADMIN_PASS = "omniSV_26";
 
 let todosLosProductosAdmin = [];
 
-// Esperar a que el DOM esté completamente cargado
 document.addEventListener('DOMContentLoaded', function() {
     
-    // =============================================
-    // REFERENCIAS DEL DOM
-    // =============================================
     const pantallaLogin = document.getElementById('pantallaLogin');
     const panelAdmin = document.getElementById('panelAdmin');
     const formLogin = document.getElementById('formLogin');
@@ -33,7 +29,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const estadoSubida = document.getElementById('estadoSubida');
     const textoEstadoSubida = document.getElementById('textoEstadoSubida');
-    const postimagesContainer = document.getElementById('postimagesContainer');
 
     const formCategoria = document.getElementById('formCategoria');
     const categoriaIdInput = document.getElementById('categoriaId');
@@ -94,7 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return urlEntry;
     }
 
-    // Crear primer campo
     crearCampoUrl('');
 
     // =============================================
@@ -114,11 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pantallaLogin.style.display = 'none';
             panelAdmin.style.display = 'block';
             errorLogin.style.display = 'none';
-            cargarCategoriasEnCheckboxes();
-            cargarProductosAdmin();
-            cargarCategoriasAdmin();
-            cargarTerminosAdmin();
-            inicializarPostimagesUpload();
+            cargarTodo();
             document.getElementById('usuario').value = '';
             document.getElementById('password').value = '';
         } else {
@@ -127,18 +117,22 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Auto-login si hay credenciales guardadas
+    // Auto-login
     if (credencialesGuardadas) {
         const { usuario, password } = JSON.parse(credencialesGuardadas);
         if (usuario === ADMIN_USER && password === ADMIN_PASS) {
             pantallaLogin.style.display = 'none';
             panelAdmin.style.display = 'block';
-            cargarCategoriasEnCheckboxes();
-            cargarProductosAdmin();
-            cargarCategoriasAdmin();
-            cargarTerminosAdmin();
-            inicializarPostimagesUpload();
+            cargarTodo();
         }
+    }
+
+    function cargarTodo() {
+        cargarCategoriasEnCheckboxes();
+        cargarProductosAdmin();
+        cargarCategoriasAdmin();
+        cargarTerminosAdmin();
+        inicializarFreeimageUpload();
     }
 
     btnCerrarSesion.addEventListener('click', function() {
@@ -158,15 +152,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
             this.classList.add('active');
             document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.remove('active'); });
-            if (tab === 'productos') {
-                document.getElementById('seccionProductos').classList.add('active');
-                cargarProductosAdmin();
-            } else if (tab === 'categorias') {
-                document.getElementById('seccionCategorias').classList.add('active');
-                cargarCategoriasAdmin();
-            } else if (tab === 'terminos') {
-                document.getElementById('seccionTerminos').classList.add('active');
-            }
+            if (tab === 'productos') { document.getElementById('seccionProductos').classList.add('active'); cargarProductosAdmin(); }
+            else if (tab === 'categorias') { document.getElementById('seccionCategorias').classList.add('active'); cargarCategoriasAdmin(); }
+            else if (tab === 'terminos') { document.getElementById('seccionTerminos').classList.add('active'); }
         });
     });
 
@@ -176,10 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (buscadorAdmin) {
         buscadorAdmin.addEventListener('input', function() {
             const texto = this.value.toLowerCase().trim();
-            if (texto === '') {
-                renderizarListaProductos(todosLosProductosAdmin);
-                return;
-            }
+            if (texto === '') { renderizarListaProductos(todosLosProductosAdmin); return; }
             const filtrados = todosLosProductosAdmin.filter(function(p) {
                 return p.nombre.toLowerCase().includes(texto) ||
                        (p.descripcion && p.descripcion.toLowerCase().includes(texto)) ||
@@ -189,17 +174,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // =============================================
-    // BOTÓN AGREGAR URL
-    // =============================================
-    btnAgregarUrl.addEventListener('click', function(e) {
-        e.preventDefault();
-        crearCampoUrl('');
-    });
+    btnAgregarUrl.addEventListener('click', function(e) { e.preventDefault(); crearCampoUrl(''); });
 
-    // =============================================
-    // CANCELAR EDICIÓN
-    // =============================================
     btnCancelarEdicion.addEventListener('click', function() {
         formProducto.reset();
         productoId.value = '';
@@ -211,34 +187,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // =============================================
-    // POSTIMAGES UPLOAD
+    // FREEIMAGE.HOST UPLOAD
     // =============================================
-    function inicializarPostimagesUpload() {
-        if (!postimagesContainer) return;
-        
-        postimagesContainer.innerHTML = `
-            <div class="upload-area" id="dropArea">
-                <input type="file" id="postimagesInput" accept="image/*" multiple style="display:none;">
-                <div class="upload-content">
-                    <span class="upload-icon">📁</span>
-                    <p>Arrastra imágenes aquí o <button type="button" id="btnSeleccionarImagen" class="btn-link">selecciona archivos</button></p>
-                    <small>JPG, PNG, GIF, WebP • Máx 10MB c/u</small>
-                </div>
-            </div>
-        `;
-        
+    function inicializarFreeimageUpload() {
         const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('postimagesInput');
+        const fileInput = document.getElementById('freeimageInput');
         const btnSeleccionar = document.getElementById('btnSeleccionarImagen');
         
-        // Abrir selector (debe ser por interacción directa del usuario)
+        if (!dropArea || !fileInput || !btnSeleccionar) return;
+        
         btnSeleccionar.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             fileInput.click();
         });
         
-        // Drag & drop
         dropArea.addEventListener('dragover', function(e) {
             e.preventDefault();
             dropArea.classList.add('drag-over');
@@ -256,7 +219,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Archivos seleccionados
         fileInput.addEventListener('change', function() {
             if (fileInput.files.length > 0) {
                 manejarArchivos(fileInput.files);
@@ -273,19 +235,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('"' + archivo.name + '" no es una imagen.');
                 continue;
             }
-            if (archivo.size > 10 * 1024 * 1024) {
-                alert('"' + archivo.name + '" es muy grande (máx 10MB).');
+            if (archivo.size > 32 * 1024 * 1024) {
+                alert('"' + archivo.name + '" es muy grande (máx 32MB).');
                 continue;
             }
             
             estadoSubida.style.display = 'block';
-            textoEstadoSubida.textContent = '⏳ Subiendo: ' + archivo.name + '...';
+            textoEstadoSubida.textContent = '⏳ Subiendo a Freeimage.host: ' + archivo.name + '...';
             textoEstadoSubida.style.color = '';
             
             try {
-                const url = await subirAPostimages(archivo);
+                const url = await subirAFreeimage(archivo);
                 if (url) {
-                    // Buscar primer campo vacío
                     const campos = document.querySelectorAll('.url-foto');
                     let asignado = false;
                     campos.forEach(function(campo) {
@@ -298,10 +259,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     textoEstadoSubida.textContent = '✅ ¡Subido! ' + archivo.name;
                     textoEstadoSubida.style.color = '#27ae60';
+                    console.log('✅ URL:', url);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                textoEstadoSubida.textContent = '❌ Error al subir ' + archivo.name + '. Intenta con otra imagen.';
+                textoEstadoSubida.textContent = '❌ Error: ' + archivo.name + ' - ' + error.message;
                 textoEstadoSubida.style.color = '#e74c3c';
             }
         }
@@ -309,40 +271,46 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
             estadoSubida.style.display = 'none';
             textoEstadoSubida.style.color = '';
-        }, 4000);
+        }, 5000);
     }
 
-    function subirAPostimages(archivo) {
+    function subirAFreeimage(archivo) {
         return new Promise(function(resolve, reject) {
             const formData = new FormData();
-            formData.append('upload', archivo);
+            formData.append('source', archivo);
+            formData.append('type', 'file');
+            formData.append('action', 'upload');
+            formData.append('timestamp', Date.now().toString());
             
-            fetch('https://postimages.org/json/rr', {
+            // API key gratuita de Freeimage.host
+            const API_KEY = '6d207e02198a847aa98d0a2a901485a5';
+            formData.append('key', API_KEY);
+            
+            fetch('https://freeimage.host/api/1/upload', {
                 method: 'POST',
                 body: formData
             })
             .then(function(response) {
-                console.log('Status:', response.status);
+                console.log('Freeimage status:', response.status);
+                if (!response.ok) throw new Error('HTTP ' + response.status);
                 return response.json();
             })
             .then(function(data) {
-                console.log('Respuesta Postimages:', data);
+                console.log('Freeimage respuesta:', data);
                 
-                if (data && data.url) {
-                    resolve(data.url);
-                } else if (data && data.image && data.image.url) {
+                if (data && data.image && data.image.url) {
                     resolve(data.image.url);
-                } else if (data && data.image && data.image.link) {
-                    resolve(data.image.link);
-                } else if (data && data.error) {
-                    reject(new Error(data.error.message || 'Error del servidor'));
+                } else if (data && data.url) {
+                    resolve(data.url);
+                } else if (data && data.image && data.image.display_url) {
+                    resolve(data.image.display_url);
                 } else {
-                    reject(new Error('No se pudo obtener la URL'));
+                    reject(new Error('No se encontró URL en la respuesta'));
                 }
             })
             .catch(function(error) {
-                console.error('Error fetch:', error);
-                reject(error);
+                console.error('Error Freeimage:', error);
+                reject(new Error('Error de conexión: ' + error.message));
             });
         });
     }
@@ -362,10 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const categorias = [];
         checkboxes.forEach(function(cb) { categorias.push(cb.value); });
         
-        if (categorias.length === 0) {
-            alert('Selecciona al menos una categoría');
-            return;
-        }
+        if (categorias.length === 0) { alert('Selecciona al menos una categoría'); return; }
         
         const inputsUrl = document.querySelectorAll('.url-foto');
         const fotos = [];
@@ -374,10 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (v !== '') fotos.push(v);
         });
         
-        if (fotos.length === 0) {
-            alert('Agrega al menos una foto');
-            return;
-        }
+        if (fotos.length === 0) { alert('Agrega al menos una foto'); return; }
         
         const productoData = {
             nombre: nombre,
@@ -424,9 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const catSnapshot = await db.collection('categorias').get();
             const categoriasMap = {};
-            catSnapshot.forEach(function(doc) {
-                categoriasMap[doc.id] = doc.data().nombre;
-            });
+            catSnapshot.forEach(function(doc) { categoriasMap[doc.id] = doc.data().nombre; });
             
             if (snapshot.empty) {
                 listaProductosAdmin.innerHTML = '<p class="vacio">No hay productos aún.</p>';
@@ -439,22 +399,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     return categoriasMap[id] || id;
                 }).join(', ') : 'Sin categoría';
                 
-                todosLosProductosAdmin.push({
-                    id: doc.id,
-                    ...p,
-                    categoriaNombres: cats
-                });
+                todosLosProductosAdmin.push({ id: doc.id, ...p, categoriaNombres: cats });
             });
             
             renderizarListaProductos(todosLosProductosAdmin);
-        } catch (error) {
-            console.error('Error:', error);
-        }
+        } catch (error) { console.error('Error:', error); }
     }
 
     function renderizarListaProductos(productos) {
         listaProductosAdmin.innerHTML = '';
-        
         if (productos.length === 0) {
             listaProductosAdmin.innerHTML = '<p class="vacio">No se encontraron productos.</p>';
             return;
@@ -489,7 +442,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Funciones globales para los botones
     window.toggleProducto = async function(id, estadoActual) {
         if (!confirm('¿' + (estadoActual ? 'Inhabilitar' : 'Habilitar') + ' este producto?')) return;
         try {
@@ -499,19 +451,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             alert('✅ Estado actualizado');
             cargarProductosAdmin();
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error');
-        }
+        } catch (error) { console.error('Error:', error); alert('❌ Error'); }
     };
 
     window.editarProducto = async function(id) {
         try {
             const doc = await db.collection('productos').doc(id).get();
-            if (!doc.exists) {
-                alert('Producto no encontrado');
-                return;
-            }
+            if (!doc.exists) { alert('Producto no encontrado'); return; }
             const p = doc.data();
             
             productoId.value = id;
@@ -536,10 +482,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tituloFormProducto.textContent = 'Editar Producto';
             btnCancelarEdicion.style.display = 'inline-block';
             document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error');
-        }
+        } catch (error) { console.error('Error:', error); alert('❌ Error'); }
     };
 
     window.eliminarProducto = async function(id) {
@@ -548,15 +491,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 await db.collection('productos').doc(id).delete();
                 alert('✅ Eliminado');
                 cargarProductosAdmin();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error');
-            }
+            } catch (error) { console.error('Error:', error); alert('❌ Error'); }
         }
     };
 
     // =============================================
-    // CARGAR CATEGORÍAS EN CHECKBOXES
+    // CATEGORÍAS EN CHECKBOXES
     // =============================================
     async function cargarCategoriasEnCheckboxes() {
         try {
@@ -573,9 +513,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 div.innerHTML = '<input type="checkbox" id="cat_' + doc.id + '" value="' + doc.id + '" class="checkbox-categoria"><label for="cat_' + doc.id + '">' + categoria.nombre + '</label>';
                 checkboxesCategorias.appendChild(div);
             });
-        } catch (error) {
-            console.error('Error:', error);
-        }
+        } catch (error) { console.error('Error:', error); }
     }
 
     // =============================================
@@ -591,10 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 await db.collection('categorias').doc(id).update({ nombre: nombre });
                 alert('✅ Actualizada');
             } else {
-                await db.collection('categorias').add({
-                    nombre: nombre,
-                    fechaCreacion: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                await db.collection('categorias').add({ nombre: nombre, fechaCreacion: firebase.firestore.FieldValue.serverTimestamp() });
                 alert('✅ Agregada');
             }
             formCategoria.reset();
@@ -603,10 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
             btnCancelarCategoria.style.display = 'none';
             cargarCategoriasAdmin();
             cargarCategoriasEnCheckboxes();
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error');
-        }
+        } catch (error) { console.error('Error:', error); alert('❌ Error'); }
     });
 
     btnCancelarCategoria.addEventListener('click', function() {
@@ -637,9 +569,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>`;
                 listaCategoriasAdmin.appendChild(div);
             });
-        } catch (error) {
-            console.error('Error:', error);
-        }
+        } catch (error) { console.error('Error:', error); }
     }
 
     window.editarCategoria = function(id, nombre) {
@@ -656,10 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('✅ Eliminada');
                 cargarCategoriasAdmin();
                 cargarCategoriasEnCheckboxes();
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error');
-            }
+            } catch (error) { console.error('Error:', error); alert('❌ Error'); }
         }
     };
 
@@ -669,30 +596,20 @@ document.addEventListener('DOMContentLoaded', function() {
     async function cargarTerminosAdmin() {
         try {
             const doc = await db.collection('configuracion').doc('terminos').get();
-            if (doc.exists) {
-                terminosTexto.value = doc.data().texto;
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
+            if (doc.exists) terminosTexto.value = doc.data().texto;
+        } catch (error) { console.error('Error:', error); }
     }
 
     btnGuardarTerminos.addEventListener('click', async function() {
         const texto = terminosTexto.value.trim();
-        if (!texto) {
-            alert('No puede estar vacío');
-            return;
-        }
+        if (!texto) { alert('No puede estar vacío'); return; }
         try {
             await db.collection('configuracion').doc('terminos').set({
                 texto: texto,
                 fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
             });
             alert('✅ Términos actualizados');
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error');
-        }
+        } catch (error) { console.error('Error:', error); alert('❌ Error'); }
     });
 
-}); // FIN DOMContentLoaded
+});
