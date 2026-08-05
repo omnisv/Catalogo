@@ -82,36 +82,32 @@
                             <textarea id="descripcion" placeholder="Describe el producto..." rows="4"></textarea>
                         </div>
                         
-                        <!-- NUEVA SECCIÓN DE FOTOS CON SUBIDA OPTIMIZADA -->
+                        <!-- FOTOS DEL PRODUCTO -->
                         <div class="form-group">
                             <label>📸 Fotos del producto *</label>
                             
-                            <!-- URLs manuales -->
+                            <!-- Contenedor de campos de URL -->
                             <div id="contenedorUrls">
                                 <div class="url-entry">
-                                    <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg">
+                                    <div class="url-input-group">
+                                        <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg">
+                                        <button type="button" class="btn-subir-foto" title="Subir foto desde PC">📤</button>
+                                    </div>
                                     <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
                                 </div>
                             </div>
                             
+                            <!-- Input de archivo oculto para Postimages -->
+                            <input type="file" id="inputFileOculto" accept="image/*" style="display:none;">
+                            
                             <!-- Botones -->
                             <div class="botones-fotos">
                                 <button type="button" id="btnAgregarUrl" class="btn-agregar">+ Agregar URL manual</button>
-                                <button type="button" id="btnSubirImagen" class="btn-subir-imagen">📤 Subir imagen desde PC (optimizada)</button>
                             </div>
                             
-                            <!-- Input oculto para seleccionar archivos -->
-                            <input type="file" id="inputFileOculto" accept="image/*" multiple style="display:none;">
-                            
-                            <!-- Progreso de subida -->
-                            <div id="progresoSubida" class="progreso-subida" style="display:none;">
-                                <div class="progreso-header">
-                                    <span class="progreso-texto" id="textoProgreso">Subiendo imágenes...</span>
-                                    <span class="progreso-porcentaje" id="porcentajeSubida">0%</span>
-                                </div>
-                                <div class="barra-progreso">
-                                    <div class="progreso-relleno" id="rellenoProgreso"></div>
-                                </div>
+                            <!-- Estado de subida -->
+                            <div id="estadoSubida" class="estado-subida" style="display:none;">
+                                <span id="textoEstadoSubida">⏳ Subiendo imagen...</span>
                             </div>
                         </div>
                         
@@ -174,6 +170,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    
+    <!-- Postimages plugin -->
+    <script src="https://postimages.org/website.js"></script>
     
     <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
