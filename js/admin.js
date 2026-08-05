@@ -44,7 +44,7 @@ const btnGuardarTerminos = document.getElementById('btnGuardarTerminos');
 const terminosTexto = document.getElementById('terminosTexto');
 
 let todosLosProductosAdmin = [];
-let campoUrlActivo = null; // Para saber qué campo de URL está activo al subir
+let campoInputActivo = null; // Campo de URL que recibirá la imagen subida
 
 // =============================================
 // TEMA OSCURO/CLARO
@@ -79,6 +79,9 @@ document.addEventListener('DOMContentLoaded', () => {
             iniciarSesion();
         }
     }
+    
+    // Crear el primer campo de URL al cargar
+    crearCampoUrl('');
 });
 
 // =============================================
@@ -107,6 +110,11 @@ function iniciarSesion() {
     pantallaLogin.style.display = 'none';
     panelAdmin.style.display = 'block';
     errorLogin.style.display = 'none';
+    
+    // Asegurar que hay al menos un campo de URL
+    if (document.querySelectorAll('.url-entry').length === 0) {
+        crearCampoUrl('');
+    }
     
     cargarCategoriasEnCheckboxes();
     cargarProductosAdmin();
@@ -175,29 +183,31 @@ function filtrarProductosAdmin(texto) {
 }
 
 // =============================================
-// CREAR NUEVO CAMPO DE URL
+// CREAR CAMPO DE URL CON BOTÓN DE SUBIR
 // =============================================
 function crearCampoUrl(valor = '') {
     const urlEntry = document.createElement('div');
     urlEntry.classList.add('url-entry');
     urlEntry.innerHTML = `
-        <div class="url-input-group">
-            <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg" value="${valor}">
-            <button type="button" class="btn-subir-foto" title="Subir foto desde PC">📤</button>
-        </div>
-        <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
+        <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg" value="${valor}">
+        <button type="button" class="btn-subir-foto" title="Subir foto desde PC">📤</button>
+        <button type="button" class="btn-eliminar-url" title="Eliminar campo">✕</button>
     `;
     
-    // Evento para el botón de subir foto
+    // Evento para el botón 📤
     const btnSubir = urlEntry.querySelector('.btn-subir-foto');
-    btnSubir.addEventListener('click', () => {
-        campoUrlActivo = urlEntry.querySelector('.url-foto');
-        inputFileOculto.click();
+    const inputUrl = urlEntry.querySelector('.url-foto');
+    
+    btnSubir.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        campoInputActivo = inputUrl; // Guardar referencia al input
+        inputFileOculto.click(); // Abrir selector de archivos
     });
     
     // Evento para eliminar
     const btnEliminar = urlEntry.querySelector('.btn-eliminar-url');
-    btnEliminar.addEventListener('click', () => {
+    btnEliminar.addEventListener('click', function() {
         if (document.querySelectorAll('.url-entry').length > 1) {
             contenedorUrls.removeChild(urlEntry);
         } else {
@@ -205,126 +215,110 @@ function crearCampoUrl(valor = '') {
         }
     });
     
+    contenedorUrls.appendChild(urlEntry);
     return urlEntry;
 }
 
-// Inicializar el primer campo
-document.addEventListener('DOMContentLoaded', () => {
-    // Configurar el primer campo existente
-    const primerEntry = document.querySelector('.url-entry');
-    if (primerEntry) {
-        const btnSubir = primerEntry.querySelector('.btn-subir-foto');
-        if (btnSubir) {
-            btnSubir.addEventListener('click', () => {
-                campoUrlActivo = primerEntry.querySelector('.url-foto');
-                inputFileOculto.click();
-            });
-        }
-    }
-});
-
-// Botón para agregar más campos
-btnAgregarUrl.addEventListener('click', () => {
-    contenedorUrls.appendChild(crearCampoUrl(''));
+// Botón + Agregar URL manual
+btnAgregarUrl.addEventListener('click', function(e) {
+    e.preventDefault();
+    crearCampoUrl('');
 });
 
 // =============================================
-// SUBIDA DE IMÁGENES CON POSTIMAGES
+// SUBIR IMAGEN A POSTIMAGES
 // =============================================
-inputFileOculto.addEventListener('change', async (e) => {
-    const archivo = e.target.files[0];
+inputFileOculto.addEventListener('change', async function() {
+    const archivo = this.files[0];
     
     if (!archivo) return;
     
-    // Validar tipo
+    // Validar que sea imagen
     if (!archivo.type.startsWith('image/')) {
-        alert('Por favor selecciona una imagen válida (JPG, PNG, GIF, WebP).');
-        inputFileOculto.value = '';
+        alert('❌ Por favor selecciona una imagen (JPG, PNG, GIF, WebP).');
+        this.value = '';
         return;
     }
     
     // Validar tamaño (máximo 10MB)
     if (archivo.size > 10 * 1024 * 1024) {
-        alert('La imagen es demasiado grande. Máximo 10MB.');
-        inputFileOculto.value = '';
+        alert('❌ La imagen es demasiado grande. Máximo 10MB.');
+        this.value = '';
         return;
     }
     
-    // Mostrar estado de subida
+    // Mostrar estado
     estadoSubida.style.display = 'block';
     textoEstadoSubida.textContent = '⏳ Subiendo imagen a Postimages...';
     
     try {
-        // Usar la API de Postimages
-        const urlImagen = await subirAPostimages(archivo);
+        const formData = new FormData();
+        formData.append('upload', archivo);
+        formData.append('format', 'json');
         
-        // Asignar URL al campo activo
-        if (campoUrlActivo) {
-            campoUrlActivo.value = urlImagen;
-            textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
-        } else {
-            // Si no hay campo activo, buscar el primer campo vacío
-            const campos = document.querySelectorAll('.url-foto');
-            let asignado = false;
-            campos.forEach(campo => {
-                if (campo.value.trim() === '' && !asignado) {
-                    campo.value = urlImagen;
-                    asignado = true;
+        const respuesta = await fetch('https://postimages.org/json/rr', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!respuesta.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+        
+        const data = await respuesta.json();
+        console.log('Respuesta de Postimages:', data);
+        
+        let urlImagen = '';
+        
+        if (data && data.image && data.image.url) {
+            urlImagen = data.image.url;
+        } else if (data && data.url) {
+            urlImagen = data.url;
+        } else if (data && data.image && data.image.link) {
+            urlImagen = data.image.link;
+        }
+        
+        if (urlImagen) {
+            // Asignar al campo activo
+            if (campoInputActivo) {
+                campoInputActivo.value = urlImagen;
+                textoEstadoSubida.textContent = '✅ ¡Imagen subida! URL pegada en el campo.';
+            } else {
+                // Buscar el primer campo vacío
+                const campos = document.querySelectorAll('.url-foto');
+                let asignado = false;
+                campos.forEach(campo => {
+                    if (campo.value.trim() === '' && !asignado) {
+                        campo.value = urlImagen;
+                        asignado = true;
+                    }
+                });
+                
+                if (!asignado) {
+                    crearCampoUrl(urlImagen);
                 }
-            });
-            
-            if (!asignado) {
-                // Si todos están llenos, crear nuevo campo
-                const nuevoEntry = crearCampoUrl(urlImagen);
-                contenedorUrls.appendChild(nuevoEntry);
+                
+                textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
             }
-            
-            textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
+        } else {
+            console.error('Formato de respuesta inesperado:', data);
+            throw new Error('No se pudo obtener la URL');
         }
         
     } catch (error) {
-        console.error('Error al subir:', error);
-        textoEstadoSubida.textContent = '❌ Error al subir la imagen. Intenta de nuevo.';
+        console.error('Error:', error);
+        textoEstadoSubida.textContent = '❌ Error al subir. Intenta con otra imagen.';
     }
     
-    // Ocultar estado después de 2 segundos
-    setTimeout(() => {
+    // Ocultar mensaje después de 3 segundos
+    setTimeout(function() {
         estadoSubida.style.display = 'none';
-    }, 2000);
+    }, 3000);
     
-    // Limpiar input file
-    inputFileOculto.value = '';
-    campoUrlActivo = null;
+    // Limpiar
+    this.value = '';
+    campoInputActivo = null;
 });
-
-// =============================================
-// FUNCIÓN PARA SUBIR A POSTIMAGES
-// =============================================
-async function subirAPostimages(archivo) {
-    const formData = new FormData();
-    formData.append('upload', archivo);
-    formData.append('format', 'json');
-    
-    const respuesta = await fetch('https://postimages.org/json/rr', {
-        method: 'POST',
-        body: formData
-    });
-    
-    if (!respuesta.ok) {
-        throw new Error('Error en la subida');
-    }
-    
-    const data = await respuesta.json();
-    
-    // Postimages devuelve varias URLs en data.image
-    if (data && data.image && data.image.url) {
-        return data.image.url; // URL directa
-    } else if (data && data.url) {
-        return data.url;
-    } else {
-        throw new Error('No se pudo obtener la URL de la imagen');
-    }
-}
 
 // =============================================
 // CARGAR CATEGORÍAS EN CHECKBOXES
@@ -374,7 +368,6 @@ formProducto.addEventListener('submit', async (e) => {
         return;
     }
     
-    // Recolectar URLs de fotos (solo strings)
     const inputsUrl = document.querySelectorAll('.url-foto');
     const fotos = [];
     inputsUrl.forEach(input => {
@@ -429,9 +422,9 @@ function resetearFormularioProducto() {
     tituloFormProducto.textContent = 'Agregar Producto';
     btnCancelarEdicion.style.display = 'none';
     
-    // Resetear a un solo campo de URL
+    // Limpiar y dejar un solo campo
     contenedorUrls.innerHTML = '';
-    contenedorUrls.appendChild(crearCampoUrl(''));
+    crearCampoUrl('');
     
     document.querySelectorAll('.checkbox-categoria').forEach(cb => cb.checked = false);
 }
@@ -568,10 +561,10 @@ async function editarProducto(id) {
         contenedorUrls.innerHTML = '';
         if (producto.fotos && producto.fotos.length > 0) {
             producto.fotos.forEach(url => {
-                contenedorUrls.appendChild(crearCampoUrl(url));
+                crearCampoUrl(url);
             });
         } else {
-            contenedorUrls.appendChild(crearCampoUrl(''));
+            crearCampoUrl('');
         }
         
         await cargarCategoriasEnCheckboxes();
