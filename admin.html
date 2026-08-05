@@ -68,8 +68,17 @@
                             </div>
                             <div class="form-group">
                                 <label for="categoriasProducto">Categorías *</label>
-                                <div id="checkboxesCategorias" class="checkboxes-container">
-                                    <p class="cargando-categorias">Cargando categorías...</p>
+                                <div class="multiselect-container" id="multiselectCategorias">
+                                    <div class="multiselect-header" id="multiselectHeader">
+                                        <span class="multiselect-placeholder">Seleccionar categorías...</span>
+                                        <span class="multiselect-arrow">▼</span>
+                                    </div>
+                                    <div class="multiselect-dropdown" id="multiselectDropdown" style="display:none;">
+                                        <input type="text" class="multiselect-search" id="multiselectSearch" placeholder="🔍 Buscar categoría...">
+                                        <div class="multiselect-options" id="multiselectOptions">
+                                            <p class="cargando-categorias">Cargando categorías...</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -88,11 +97,11 @@
                             <div class="upload-area-container">
                                 <p class="upload-label">📤 O sube imágenes directamente:</p>
                                 <div class="upload-area" id="dropArea">
-                                    <input type="file" id="freeimageInput" accept="image/*" multiple style="display:none;">
+                                    <input type="file" id="imgurInput" accept="image/*" multiple style="display:none;">
                                     <div class="upload-content">
                                         <span class="upload-icon">📁</span>
                                         <p>Arrastra imágenes aquí o <button type="button" id="btnSeleccionarImagen" class="btn-link">selecciona archivos</button></p>
-                                        <small>JPG, PNG, GIF, WebP • Máx 32MB c/u • Freeimage.host</small>
+                                        <small>JPG, PNG, GIF, WebP • Máx 10MB c/u</small>
                                     </div>
                                 </div>
                             </div>
