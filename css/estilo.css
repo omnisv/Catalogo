@@ -664,7 +664,9 @@ footer h4 {
     font-size: 0.9em;
 }
 
-/* URLs de fotos */
+/* ============================================= */
+/* CAMPOS DE URL + SUBIDA DE FOTOS               */
+/* ============================================= */
 .url-entry {
     display: flex;
     gap: 8px;
@@ -672,8 +674,53 @@ footer h4 {
     align-items: center;
 }
 
-.url-entry input {
+.url-input-group {
+    display: flex;
     flex: 1;
+    gap: 6px;
+    align-items: center;
+}
+
+.url-input-group input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 2px solid var(--borde-input);
+    border-radius: 10px;
+    font-size: 15px;
+    background: var(--bg-input);
+    color: var(--texto-input);
+    transition: var(--transicion);
+}
+
+.url-input-group input:focus {
+    outline: none;
+    border-color: var(--color-secundario);
+    box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+}
+
+.btn-subir-foto {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: var(--transicion);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-subir-foto:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(52,152,219,0.4);
+}
+
+.btn-subir-foto:active {
+    transform: scale(0.95);
 }
 
 .btn-eliminar-url {
@@ -718,65 +765,24 @@ footer h4 {
     background: rgba(233,69,96,0.1);
 }
 
-.btn-subir-imagen {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 14px;
-    transition: var(--transicion);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.btn-subir-imagen:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(52,152,219,0.4);
-}
-
-.btn-subir-imagen:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-}
-
-/* Progreso de subida */
-.progreso-subida {
-    margin-top: 12px;
-    padding: 12px;
+/* Estado de subida */
+.estado-subida {
+    margin-top: 10px;
+    padding: 10px 14px;
     background: var(--bg-terciario);
     border-radius: 8px;
     border: 1px solid var(--borde);
-}
-
-.progreso-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
     font-size: 0.9em;
     color: var(--texto-secundario);
+    animation: fadeIn 0.3s ease;
 }
 
-.barra-progreso {
-    width: 100%;
-    height: 8px;
-    background: var(--borde);
-    border-radius: 4px;
-    overflow: hidden;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.progreso-relleno {
-    height: 100%;
-    background: linear-gradient(90deg, #3498db, #2ecc71);
-    width: 0%;
-    transition: width 0.3s ease;
-    border-radius: 4px;
-}
-
+/* Botones del formulario */
 .form-botones {
     display: flex;
     gap: 10px;
