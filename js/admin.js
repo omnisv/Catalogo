@@ -23,9 +23,9 @@ const checkboxesCategorias = document.getElementById('checkboxesCategorias');
 const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
 const buscadorAdmin = document.getElementById('buscadorAdmin');
 
-const btnSubirPostimages = document.getElementById('btnSubirPostimages');
 const estadoSubida = document.getElementById('estadoSubida');
 const textoEstadoSubida = document.getElementById('textoEstadoSubida');
+const postimagesContainer = document.getElementById('postimagesContainer');
 
 const formCategoria = document.getElementById('formCategoria');
 const categoriaIdInput = document.getElementById('categoriaId');
@@ -67,6 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (usuario === ADMIN_USER && password === ADMIN_PASS) iniciarSesion();
     }
     crearCampoUrl('');
+    inicializarPostimagesUpload();
 });
 
 // =============================================
@@ -94,6 +95,7 @@ function iniciarSesion() {
     panelAdmin.style.display = 'block';
     errorLogin.style.display = 'none';
     if (document.querySelectorAll('.url-entry').length === 0) crearCampoUrl('');
+    inicializarPostimagesUpload();
     cargarCategoriasEnCheckboxes();
     cargarProductosAdmin();
     cargarCategoriasAdmin();
@@ -152,8 +154,7 @@ function crearCampoUrl(valor = '') {
         <button type="button" class="btn-eliminar-url" title="Eliminar campo">✕</button>
     `;
     
-    const btnEliminar = urlEntry.querySelector('.btn-eliminar-url');
-    btnEliminar.addEventListener('click', function() {
+    urlEntry.querySelector('.btn-eliminar-url').addEventListener('click', function() {
         if (document.querySelectorAll('.url-entry').length > 1) {
             contenedorUrls.removeChild(urlEntry);
         } else {
@@ -168,85 +169,152 @@ function crearCampoUrl(valor = '') {
 btnAgregarUrl.addEventListener('click', (e) => { e.preventDefault(); crearCampoUrl(''); });
 
 // =============================================
-// ABRIR POSTIMAGES EN POPUP
+// POSTIMAGES: SUBIDA DIRECTA CON XMLHttpRequest
 // =============================================
-btnSubirPostimages.addEventListener('click', () => {
-    // Crear overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'postimagesOverlay';
-    overlay.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.75); z-index: 9999;
-        display: flex; align-items: center; justify-content: center;
-    `;
+function inicializarPostimagesUpload() {
+    if (!postimagesContainer) return;
     
-    const popup = document.createElement('div');
-    popup.style.cssText = `
-        background: white; border-radius: 16px; padding: 24px;
-        width: 90%; max-width: 520px; position: relative;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-    `;
-    
-    popup.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 style="margin:0;font-size:18px;">📤 Subir imagen a Postimages</h3>
-            <button id="btnCerrarPopup" style="background:#ff4757;color:white;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1;">✕</button>
+    postimagesContainer.innerHTML = `
+        <div class="upload-area" id="dropArea">
+            <input type="file" id="postimagesInput" accept="image/*" style="display:none;">
+            <div class="upload-content">
+                <span class="upload-icon">📁</span>
+                <p>Arrastra imágenes aquí o <button type="button" id="btnSeleccionarImagen" class="btn-link">selecciona archivos</button></p>
+                <small>JPG, PNG, GIF, WebP • Máx 10MB</small>
+            </div>
         </div>
-        <p style="color:#666;font-size:14px;margin-bottom:16px;">Haz clic en el botón para abrir Postimages en una nueva pestaña. <strong>Copia el "Direct link"</strong> y pégalo aquí.</p>
-        <button id="btnAbrirPostimages" style="width:100%;padding:14px;background:#3498db;color:white;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;margin-bottom:16px;">
-            🔗 Abrir Postimages en nueva pestaña
-        </button>
-        <input type="text" id="inputUrlPopup" placeholder="Pega aquí el Direct link de la imagen..." 
-               style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:14px;">
-        <button id="btnUsarUrl" style="width:100%;padding:12px;margin-top:8px;background:#27ae60;color:white;border:none;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;">
-            ✅ Usar esta URL
-        </button>
     `;
     
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
+    const dropArea = document.getElementById('dropArea');
+    const fileInput = document.getElementById('postimagesInput');
+    const btnSeleccionar = document.getElementById('btnSeleccionarImagen');
     
-    // Eventos
-    document.getElementById('btnCerrarPopup').addEventListener('click', () => {
-        document.body.removeChild(overlay);
+    // Abrir selector de archivos
+    btnSeleccionar.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput.click();
     });
     
-    overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) document.body.removeChild(overlay);
+    dropArea.addEventListener('click', () => {
+        fileInput.click();
     });
     
-    document.getElementById('btnAbrirPostimages').addEventListener('click', () => {
-        window.open('https://postimages.org/', '_blank');
+    // Drag & drop
+    dropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropArea.classList.add('drag-over');
     });
     
-    document.getElementById('btnUsarUrl').addEventListener('click', () => {
-        const url = document.getElementById('inputUrlPopup').value.trim();
-        if (url && url.startsWith('http')) {
-            // Buscar el primer campo vacío o crear uno nuevo
-            const campos = document.querySelectorAll('.url-foto');
-            let asignado = false;
-            campos.forEach(campo => {
-                if (campo.value.trim() === '' && !asignado) {
-                    campo.value = url;
-                    asignado = true;
-                }
-            });
-            if (!asignado) crearCampoUrl(url);
-            
-            document.body.removeChild(overlay);
-            
-            estadoSubida.style.display = 'block';
-            textoEstadoSubida.textContent = '✅ ¡URL pegada correctamente!';
-            textoEstadoSubida.style.color = '#27ae60';
-            setTimeout(() => {
-                estadoSubida.style.display = 'none';
-                textoEstadoSubida.style.color = '';
-            }, 3000);
-        } else {
-            alert('❌ Pega una URL válida (debe empezar con https://)');
+    dropArea.addEventListener('dragleave', () => {
+        dropArea.classList.remove('drag-over');
+    });
+    
+    dropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropArea.classList.remove('drag-over');
+        const archivos = e.dataTransfer.files;
+        if (archivos.length > 0) {
+            manejarArchivos(archivos);
         }
     });
-});
+    
+    // Selección de archivos
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            manejarArchivos(fileInput.files);
+        }
+    });
+}
+
+// =============================================
+// MANEJAR ARCHIVOS Y SUBIR A POSTIMAGES
+// =============================================
+async function manejarArchivos(archivos) {
+    for (const archivo of archivos) {
+        // Validar
+        if (!archivo.type.startsWith('image/')) {
+            alert(`"${archivo.name}" no es una imagen válida.`);
+            continue;
+        }
+        if (archivo.size > 10 * 1024 * 1024) {
+            alert(`"${archivo.name}" es muy grande. Máx 10MB.`);
+            continue;
+        }
+        
+        estadoSubida.style.display = 'block';
+        textoEstadoSubida.textContent = `⏳ Subiendo: ${archivo.name}...`;
+        textoEstadoSubida.style.color = '';
+        
+        try {
+            const url = await subirAPostimagesXHR(archivo);
+            if (url) {
+                // Pegar URL en el primer campo vacío o crear uno nuevo
+                const campos = document.querySelectorAll('.url-foto');
+                let asignado = false;
+                campos.forEach(campo => {
+                    if (campo.value.trim() === '' && !asignado) {
+                        campo.value = url;
+                        asignado = true;
+                    }
+                });
+                if (!asignado) crearCampoUrl(url);
+                
+                textoEstadoSubida.textContent = `✅ ¡Subido! ${archivo.name}`;
+                textoEstadoSubida.style.color = '#27ae60';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            textoEstadoSubida.textContent = `❌ Error al subir ${archivo.name}`;
+            textoEstadoSubida.style.color = '#e74c3c';
+        }
+    }
+    
+    setTimeout(() => {
+        estadoSubida.style.display = 'none';
+        textoEstadoSubida.style.color = '';
+    }, 4000);
+}
+
+// =============================================
+// SUBIR A POSTIMAGES USANDO XMLHttpRequest
+// =============================================
+function subirAPostimagesXHR(archivo) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('upload', archivo);
+        formData.append('format', 'json');
+        
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://postimages.org/json/rr', true);
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    const data = JSON.parse(xhr.responseText);
+                    if (data && data.url) {
+                        resolve(data.url);
+                    } else if (data && data.image && data.image.url) {
+                        resolve(data.image.url);
+                    } else if (data && data.error) {
+                        reject(new Error(data.error.message || 'Error del servidor'));
+                    } else {
+                        reject(new Error('Formato de respuesta desconocido'));
+                    }
+                } catch (e) {
+                    reject(new Error('Error al parsear respuesta'));
+                }
+            } else {
+                reject(new Error(`Error HTTP: ${xhr.status}`));
+            }
+        };
+        
+        xhr.onerror = function() {
+            reject(new Error('Error de red'));
+        };
+        
+        xhr.send(formData);
+    });
+}
 
 // =============================================
 // CARGAR CATEGORÍAS EN CHECKBOXES
