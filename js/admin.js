@@ -23,6 +23,7 @@ const checkboxesCategorias = document.getElementById('checkboxesCategorias');
 const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
 const buscadorAdmin = document.getElementById('buscadorAdmin');
 
+const btnSubirPostimages = document.getElementById('btnSubirPostimages');
 const estadoSubida = document.getElementById('estadoSubida');
 const textoEstadoSubida = document.getElementById('textoEstadoSubida');
 
@@ -38,7 +39,6 @@ const btnGuardarTerminos = document.getElementById('btnGuardarTerminos');
 const terminosTexto = document.getElementById('terminosTexto');
 
 let todosLosProductosAdmin = [];
-let campoInputActivo = null;
 
 // =============================================
 // TEMA
@@ -149,19 +149,8 @@ function crearCampoUrl(valor = '') {
     urlEntry.classList.add('url-entry');
     urlEntry.innerHTML = `
         <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg" value="${valor}">
-        <button type="button" class="btn-subir-foto" title="Subir foto a Postimages">📤</button>
         <button type="button" class="btn-eliminar-url" title="Eliminar campo">✕</button>
     `;
-    
-    const btnSubir = urlEntry.querySelector('.btn-subir-foto');
-    const inputUrl = urlEntry.querySelector('.url-foto');
-    
-    btnSubir.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        campoInputActivo = inputUrl;
-        abrirPostimagesPopup();
-    });
     
     const btnEliminar = urlEntry.querySelector('.btn-eliminar-url');
     btnEliminar.addEventListener('click', function() {
@@ -179,110 +168,85 @@ function crearCampoUrl(valor = '') {
 btnAgregarUrl.addEventListener('click', (e) => { e.preventDefault(); crearCampoUrl(''); });
 
 // =============================================
-// ABRIR POPUP DE POSTIMAGES
+// ABRIR POSTIMAGES EN POPUP
 // =============================================
-function abrirPostimagesPopup() {
+btnSubirPostimages.addEventListener('click', () => {
     // Crear overlay
     const overlay = document.createElement('div');
     overlay.id = 'postimagesOverlay';
     overlay.style.cssText = `
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.7);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.75); z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
     `;
     
-    // Crear contenedor del popup
     const popup = document.createElement('div');
     popup.style.cssText = `
-        background: white;
-        border-radius: 16px;
-        padding: 20px;
-        width: 90%;
-        max-width: 500px;
-        max-height: 80vh;
-        overflow: hidden;
-        position: relative;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        background: white; border-radius: 16px; padding: 24px;
+        width: 90%; max-width: 520px; position: relative;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
     `;
     
     popup.innerHTML = `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-            <h3 style="margin:0;color:#333;">📤 Subir imagen a Postimages</h3>
-            <button id="btnCerrarPopup" style="background:#ff4757;color:white;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3 style="margin:0;font-size:18px;">📤 Subir imagen a Postimages</h3>
+            <button id="btnCerrarPopup" style="background:#ff4757;color:white;border:none;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;line-height:1;">✕</button>
         </div>
-        <p style="margin-bottom:12px;color:#666;font-size:14px;">Sube la imagen. Cuando termine, copia el enlace "Direct link" y pégalo abajo.</p>
-        <div id="iframeContainer" style="width:100%;height:350px;border:2px dashed #ddd;border-radius:8px;overflow:hidden;background:#fafafa;">
-            <p style="text-align:center;padding-top:150px;color:#999;">Cargando Postimages...</p>
-        </div>
-        <input type="text" id="inputUrlPopup" placeholder="Pega aquí el Direct link de la imagen..." style="width:100%;padding:12px;margin-top:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;">
-        <button id="btnUsarUrl" style="width:100%;padding:12px;margin-top:8px;background:#27ae60;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">✅ Usar esta URL</button>
+        <p style="color:#666;font-size:14px;margin-bottom:16px;">Haz clic en el botón para abrir Postimages en una nueva pestaña. <strong>Copia el "Direct link"</strong> y pégalo aquí.</p>
+        <button id="btnAbrirPostimages" style="width:100%;padding:14px;background:#3498db;color:white;border:none;border-radius:10px;font-size:15px;font-weight:bold;cursor:pointer;margin-bottom:16px;">
+            🔗 Abrir Postimages en nueva pestaña
+        </button>
+        <input type="text" id="inputUrlPopup" placeholder="Pega aquí el Direct link de la imagen..." 
+               style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:14px;">
+        <button id="btnUsarUrl" style="width:100%;padding:12px;margin-top:8px;background:#27ae60;color:white;border:none;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;">
+            ✅ Usar esta URL
+        </button>
     `;
     
     overlay.appendChild(popup);
     document.body.appendChild(overlay);
     
-    // Cargar iframe de Postimages
-    setTimeout(() => {
-        const iframeContainer = document.getElementById('iframeContainer');
-        iframeContainer.innerHTML = `
-            <iframe src="https://postimages.org/plugins" 
-                    style="width:100%;height:350px;border:none;"
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
-            </iframe>
-        `;
-    }, 500);
-    
-    // Cerrar popup
+    // Eventos
     document.getElementById('btnCerrarPopup').addEventListener('click', () => {
         document.body.removeChild(overlay);
     });
     
-    // Cerrar al hacer clic fuera
     overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            document.body.removeChild(overlay);
-        }
+        if (e.target === overlay) document.body.removeChild(overlay);
     });
     
-    // Usar URL
+    document.getElementById('btnAbrirPostimages').addEventListener('click', () => {
+        window.open('https://postimages.org/', '_blank');
+    });
+    
     document.getElementById('btnUsarUrl').addEventListener('click', () => {
         const url = document.getElementById('inputUrlPopup').value.trim();
         if (url && url.startsWith('http')) {
-            if (campoInputActivo) {
-                campoInputActivo.value = url;
-            } else {
-                const campos = document.querySelectorAll('.url-foto');
-                let asignado = false;
-                campos.forEach(campo => {
-                    if (campo.value.trim() === '' && !asignado) {
-                        campo.value = url;
-                        asignado = true;
-                    }
-                });
-                if (!asignado) crearCampoUrl(url);
-            }
+            // Buscar el primer campo vacío o crear uno nuevo
+            const campos = document.querySelectorAll('.url-foto');
+            let asignado = false;
+            campos.forEach(campo => {
+                if (campo.value.trim() === '' && !asignado) {
+                    campo.value = url;
+                    asignado = true;
+                }
+            });
+            if (!asignado) crearCampoUrl(url);
+            
             document.body.removeChild(overlay);
-            mostrarMensajeExito();
+            
+            estadoSubida.style.display = 'block';
+            textoEstadoSubida.textContent = '✅ ¡URL pegada correctamente!';
+            textoEstadoSubida.style.color = '#27ae60';
+            setTimeout(() => {
+                estadoSubida.style.display = 'none';
+                textoEstadoSubida.style.color = '';
+            }, 3000);
         } else {
-            alert('Por favor pega una URL válida (debe empezar con http)');
+            alert('❌ Pega una URL válida (debe empezar con https://)');
         }
     });
-}
-
-function mostrarMensajeExito() {
-    estadoSubida.style.display = 'block';
-    textoEstadoSubida.textContent = '✅ ¡URL pegada en el campo!';
-    textoEstadoSubida.style.color = '#27ae60';
-    setTimeout(() => {
-        estadoSubida.style.display = 'none';
-        textoEstadoSubida.style.color = '';
-    }, 3000);
-}
+});
 
 // =============================================
 // CARGAR CATEGORÍAS EN CHECKBOXES
@@ -292,7 +256,7 @@ async function cargarCategoriasEnCheckboxes() {
         const snapshot = await db.collection('categorias').orderBy('nombre').get();
         checkboxesCategorias.innerHTML = '';
         if (snapshot.empty) {
-            checkboxesCategorias.innerHTML = '<p class="info-text">No hay categorías. Agrégalas en la pestaña Categorías.</p>';
+            checkboxesCategorias.innerHTML = '<p class="info-text">No hay categorías.</p>';
             return;
         }
         snapshot.forEach(doc => {
@@ -408,14 +372,13 @@ function renderizarListaProductos(productos) {
 }
 
 // =============================================
-// TOGGLE / EDITAR / ELIMINAR PRODUCTO
+// TOGGLE / EDITAR / ELIMINAR
 // =============================================
 async function toggleProducto(id, estadoActual) {
     if (!confirm(`¿${estadoActual ? 'Inhabilitar' : 'Habilitar'} este producto?`)) return;
     try {
         await db.collection('productos').doc(id).update({ activo: !estadoActual, fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp() });
-        alert('✅ Estado actualizado');
-        cargarProductosAdmin();
+        alert('✅ Estado actualizado'); cargarProductosAdmin();
     } catch (error) { console.error('Error:', error); alert('❌ Error'); }
 }
 
@@ -438,7 +401,7 @@ async function editarProducto(id) {
         tituloFormProducto.textContent = 'Editar Producto';
         btnCancelarEdicion.style.display = 'inline-block';
         document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
-    } catch (error) { console.error('Error:', error); alert('❌ Error al cargar producto'); }
+    } catch (error) { console.error('Error:', error); alert('❌ Error'); }
 }
 
 async function eliminarProducto(id) {
@@ -459,17 +422,13 @@ formCategoria.addEventListener('submit', async (e) => {
     try {
         if (id) { await db.collection('categorias').doc(id).update({ nombre }); alert('✅ Actualizada'); }
         else { await db.collection('categorias').add({ nombre, fechaCreacion: firebase.firestore.FieldValue.serverTimestamp() }); alert('✅ Agregada'); }
-        resetearFormularioCategoria();
-        cargarCategoriasAdmin();
-        cargarCategoriasEnCheckboxes();
+        resetearFormularioCategoria(); cargarCategoriasAdmin(); cargarCategoriasEnCheckboxes();
     } catch (error) { console.error('Error:', error); alert('❌ Error'); }
 });
 
 function resetearFormularioCategoria() {
-    formCategoria.reset();
-    categoriaIdInput.value = '';
-    tituloFormCategoria.textContent = 'Agregar Categoría';
-    btnCancelarCategoria.style.display = 'none';
+    formCategoria.reset(); categoriaIdInput.value = '';
+    tituloFormCategoria.textContent = 'Agregar Categoría'; btnCancelarCategoria.style.display = 'none';
 }
 btnCancelarCategoria.addEventListener('click', resetearFormularioCategoria);
 
@@ -494,10 +453,8 @@ async function cargarCategoriasAdmin() {
 }
 
 function editarCategoria(id, nombre) {
-    categoriaIdInput.value = id;
-    nombreCategoriaInput.value = nombre;
-    tituloFormCategoria.textContent = 'Editar Categoría';
-    btnCancelarCategoria.style.display = 'inline-block';
+    categoriaIdInput.value = id; nombreCategoriaInput.value = nombre;
+    tituloFormCategoria.textContent = 'Editar Categoría'; btnCancelarCategoria.style.display = 'inline-block';
 }
 async function eliminarCategoria(id) {
     if (confirm('¿Eliminar esta categoría?')) {
