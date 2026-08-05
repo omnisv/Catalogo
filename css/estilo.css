@@ -1012,3 +1012,66 @@ footer h4 {
     .producto-pdf-item { break-inside: avoid; page-break-inside: avoid; }
     @page { margin: 1cm; }
 }
+
+/* ============================================= */
+/* POSTIMAGES UPLOAD AREA                         */
+/* ============================================= */
+.postimages-upload-area {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--borde);
+}
+
+.postimages-label {
+    font-weight: 600;
+    color: var(--texto-principal);
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+
+.upload-area {
+    border: 2px dashed var(--borde-input);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transicion);
+    background: var(--bg-terciario);
+}
+
+.upload-area:hover,
+.upload-area.drag-over {
+    border-color: #3498db;
+    background: rgba(52,152,219,0.05);
+}
+
+.upload-icon {
+    font-size: 36px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.upload-content p {
+    color: var(--texto-principal);
+    margin-bottom: 4px;
+}
+
+.upload-content small {
+    color: var(--texto-terciario);
+    font-size: 0.8em;
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: #3498db;
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: underline;
+    padding: 0;
+    font-size: inherit;
+}
+
+.btn-link:hover {
+    color: #2980b9;
+}
