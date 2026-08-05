@@ -1,5 +1,7 @@
-// Configuración de Firebase para OmniSV
-// Usando SDK Compat (CDN) para funcionar sin bundler
+// =============================================
+// CONFIGURACIÓN DE FIREBASE - OMNI SV
+// =============================================
+
 const firebaseConfig = {
   apiKey: "AIzaSyAdEB8TOv92rlk-QMKScUSzE-UX3zI2ELI",
   authDomain: "omnisv-2cd6d.firebaseapp.com",
@@ -10,8 +12,9 @@ const firebaseConfig = {
   measurementId: "G-ST4E7435WY"
 };
 
-// Inicializar Firebase con la versión compat
+// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const storage = firebase.storage();
 
-console.log("🔥 Firebase inicializado correctamente - OmniSV");
+console.log("🔥 OmniSV - Firebase inicializado correctamente");
