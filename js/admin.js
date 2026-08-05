@@ -186,8 +186,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.checkbox-categoria').forEach(function(cb) { cb.checked = false; });
     });
 
-    // =============================================
-    // FREEIMAGE.HOST UPLOAD
+    
+       // =============================================
+    // IMGUR UPLOAD (ANÓNIMO, SIN API KEY)
     // =============================================
     function inicializarFreeimageUpload() {
         const dropArea = document.getElementById('dropArea');
@@ -195,6 +196,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const btnSeleccionar = document.getElementById('btnSeleccionarImagen');
         
         if (!dropArea || !fileInput || !btnSeleccionar) return;
+        
+        // Actualizar el texto para decir Imgur
+        const smallText = dropArea.querySelector('small');
+        if (smallText) smallText.textContent = 'JPG, PNG, GIF, WebP • Máx 10MB c/u • Imgur';
         
         btnSeleccionar.addEventListener('click', function(e) {
             e.preventDefault();
@@ -235,17 +240,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert('"' + archivo.name + '" no es una imagen.');
                 continue;
             }
-            if (archivo.size > 32 * 1024 * 1024) {
-                alert('"' + archivo.name + '" es muy grande (máx 32MB).');
+            if (archivo.size > 10 * 1024 * 1024) {
+                alert('"' + archivo.name + '" es muy grande (máx 10MB).');
                 continue;
             }
             
             estadoSubida.style.display = 'block';
-            textoEstadoSubida.textContent = '⏳ Subiendo a Freeimage.host: ' + archivo.name + '...';
+            textoEstadoSubida.textContent = '⏳ Subiendo a Imgur: ' + archivo.name + '...';
             textoEstadoSubida.style.color = '';
             
             try {
-                const url = await subirAFreeimage(archivo);
+                const url = await subirAImgur(archivo);
                 if (url) {
                     const campos = document.querySelectorAll('.url-foto');
                     let asignado = false;
@@ -274,46 +279,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 5000);
     }
 
-    function subirAFreeimage(archivo) {
+    function subirAImgur(archivo) {
         return new Promise(function(resolve, reject) {
-            const formData = new FormData();
-            formData.append('source', archivo);
-            formData.append('type', 'file');
-            formData.append('action', 'upload');
-            formData.append('timestamp', Date.now().toString());
-            
-            // API key gratuita de Freeimage.host
-            const API_KEY = '6d207e02198a847aa98d0a2a901485a5';
-            formData.append('key', API_KEY);
-            
-            fetch('https://freeimage.host/api/1/upload', {
-                method: 'POST',
-                body: formData
-            })
-            .then(function(response) {
-                console.log('Freeimage status:', response.status);
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                return response.json();
-            })
-            .then(function(data) {
-                console.log('Freeimage respuesta:', data);
+            // Convertir a base64
+            const reader = new FileReader();
+            reader.onload = function() {
+                const base64 = reader.result.split(',')[1];
                 
-                if (data && data.image && data.image.url) {
-                    resolve(data.image.url);
-                } else if (data && data.url) {
-                    resolve(data.url);
-                } else if (data && data.image && data.image.display_url) {
-                    resolve(data.image.display_url);
-                } else {
-                    reject(new Error('No se encontró URL en la respuesta'));
-                }
-            })
-            .catch(function(error) {
-                console.error('Error Freeimage:', error);
-                reject(new Error('Error de conexión: ' + error.message));
-            });
+                const formData = new FormData();
+                formData.append('image', base64);
+                formData.append('type', 'base64');
+                
+                fetch('https://api.imgur.com/3/image', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Client-ID 546c25a59c58ad7'
+                    },
+                    body: formData
+                })
+                .then(function(response) {
+                    console.log('Imgur status:', response.status);
+                    return response.json();
+                })
+                .then(function(data) {
+                    console.log('Imgur respuesta:', data);
+                    
+                    if (data && data.success && data.data && data.data.link) {
+                        resolve(data.data.link);
+                    } else if (data && data.data && data.data.error) {
+                        reject(new Error(data.data.error));
+                    } else {
+                        reject(new Error('No se pudo obtener la URL'));
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error Imgur:', error);
+                    reject(new Error('Error de conexión'));
+                });
+            };
+            reader.onerror = function() {
+                reject(new Error('Error al leer el archivo'));
+            };
+            reader.readAsDataURL(archivo);
         });
     }
+
 
     // =============================================
     // GUARDAR PRODUCTO
