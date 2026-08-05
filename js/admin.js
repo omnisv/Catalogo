@@ -5,40 +5,54 @@
 const ADMIN_USER = "omnisv";
 const ADMIN_PASS = "omniSV_26";
 
-const pantallaLogin = document.getElementById('pantallaLogin');
-const panelAdmin = document.getElementById('panelAdmin');
-const formLogin = document.getElementById('formLogin');
-const errorLogin = document.getElementById('errorLogin');
-const btnCerrarSesion = document.getElementById('btnCerrarSesion');
-const btnTemaAdmin = document.getElementById('btnTemaAdmin');
-const recordarmeCheck = document.getElementById('recordarme');
-
-const formProducto = document.getElementById('formProducto');
-const productoId = document.getElementById('productoId');
-const tituloFormProducto = document.getElementById('tituloFormProducto');
-const contenedorUrls = document.getElementById('contenedorUrls');
-const btnAgregarUrl = document.getElementById('btnAgregarUrl');
-const listaProductosAdmin = document.getElementById('listaProductosAdmin');
-const checkboxesCategorias = document.getElementById('checkboxesCategorias');
-const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
-const buscadorAdmin = document.getElementById('buscadorAdmin');
-
-const estadoSubida = document.getElementById('estadoSubida');
-const textoEstadoSubida = document.getElementById('textoEstadoSubida');
-const postimagesContainer = document.getElementById('postimagesContainer');
-
-const formCategoria = document.getElementById('formCategoria');
-const categoriaIdInput = document.getElementById('categoriaId');
-const nombreCategoriaInput = document.getElementById('nombreCategoria');
-const tituloFormCategoria = document.getElementById('tituloFormCategoria');
-const btnGuardarCategoria = document.getElementById('btnGuardarCategoria');
-const btnCancelarCategoria = document.getElementById('btnCancelarCategoria');
-const listaCategoriasAdmin = document.getElementById('listaCategoriasAdmin');
-
-const btnGuardarTerminos = document.getElementById('btnGuardarTerminos');
-const terminosTexto = document.getElementById('terminosTexto');
+// Elementos del DOM (se asignan después de iniciar sesión)
+let pantallaLogin, panelAdmin, formLogin, errorLogin, btnCerrarSesion, btnTemaAdmin, recordarmeCheck;
+let formProducto, productoId, tituloFormProducto, contenedorUrls, btnAgregarUrl;
+let listaProductosAdmin, checkboxesCategorias, btnCancelarEdicion, buscadorAdmin;
+let estadoSubida, textoEstadoSubida, postimagesContainer;
+let formCategoria, categoriaIdInput, nombreCategoriaInput, tituloFormCategoria;
+let btnGuardarCategoria, btnCancelarCategoria, listaCategoriasAdmin;
+let btnGuardarTerminos, terminosTexto;
 
 let todosLosProductosAdmin = [];
+
+// =============================================
+// INICIALIZAR REFERENCIAS DEL DOM
+// =============================================
+function inicializarDOM() {
+    pantallaLogin = document.getElementById('pantallaLogin');
+    panelAdmin = document.getElementById('panelAdmin');
+    formLogin = document.getElementById('formLogin');
+    errorLogin = document.getElementById('errorLogin');
+    btnCerrarSesion = document.getElementById('btnCerrarSesion');
+    btnTemaAdmin = document.getElementById('btnTemaAdmin');
+    recordarmeCheck = document.getElementById('recordarme');
+
+    formProducto = document.getElementById('formProducto');
+    productoId = document.getElementById('productoId');
+    tituloFormProducto = document.getElementById('tituloFormProducto');
+    contenedorUrls = document.getElementById('contenedorUrls');
+    btnAgregarUrl = document.getElementById('btnAgregarUrl');
+    listaProductosAdmin = document.getElementById('listaProductosAdmin');
+    checkboxesCategorias = document.getElementById('checkboxesCategorias');
+    btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
+    buscadorAdmin = document.getElementById('buscadorAdmin');
+
+    estadoSubida = document.getElementById('estadoSubida');
+    textoEstadoSubida = document.getElementById('textoEstadoSubida');
+    postimagesContainer = document.getElementById('postimagesContainer');
+
+    formCategoria = document.getElementById('formCategoria');
+    categoriaIdInput = document.getElementById('categoriaId');
+    nombreCategoriaInput = document.getElementById('nombreCategoria');
+    tituloFormCategoria = document.getElementById('tituloFormCategoria');
+    btnGuardarCategoria = document.getElementById('btnGuardarCategoria');
+    btnCancelarCategoria = document.getElementById('btnCancelarCategoria');
+    listaCategoriasAdmin = document.getElementById('listaCategoriasAdmin');
+
+    btnGuardarTerminos = document.getElementById('btnGuardarTerminos');
+    terminosTexto = document.getElementById('terminosTexto');
+}
 
 // =============================================
 // TEMA
@@ -52,12 +66,15 @@ function toggleTema() {
 }
 const temaGuardado = localStorage.getItem('tema') || 'light';
 document.documentElement.setAttribute('data-theme', temaGuardado);
-if (btnTemaAdmin) btnTemaAdmin.addEventListener('click', toggleTema);
 
 // =============================================
 // RECORDARME
 // =============================================
 document.addEventListener('DOMContentLoaded', () => {
+    inicializarDOM();
+    
+    if (btnTemaAdmin) btnTemaAdmin.addEventListener('click', toggleTema);
+    
     const credencialesGuardadas = localStorage.getItem('omnisv_credenciales');
     if (credencialesGuardadas) {
         const { usuario, password } = JSON.parse(credencialesGuardadas);
@@ -67,7 +84,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (usuario === ADMIN_USER && password === ADMIN_PASS) iniciarSesion();
     }
     crearCampoUrl('');
-    inicializarPostimagesUpload();
 });
 
 // =============================================
@@ -94,53 +110,74 @@ function iniciarSesion() {
     pantallaLogin.style.display = 'none';
     panelAdmin.style.display = 'block';
     errorLogin.style.display = 'none';
+    
     if (document.querySelectorAll('.url-entry').length === 0) crearCampoUrl('');
+    
     inicializarPostimagesUpload();
+    configurarEventosAdmin();
     cargarCategoriasEnCheckboxes();
     cargarProductosAdmin();
     cargarCategoriasAdmin();
     cargarTerminosAdmin();
+    
     document.getElementById('usuario').value = '';
     document.getElementById('password').value = '';
 }
 
-btnCerrarSesion.addEventListener('click', () => {
-    if (confirm('¿Estás seguro de cerrar sesión?')) {
-        pantallaLogin.style.display = 'block';
-        panelAdmin.style.display = 'none';
-        document.getElementById('password').value = '';
-    }
-});
-
 // =============================================
-// PESTAÑAS
+// CONFIGURAR EVENTOS DESPUÉS DE INICIAR SESIÓN
 // =============================================
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const tab = btn.dataset.tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        if (tab === 'productos') { document.getElementById('seccionProductos').classList.add('active'); cargarProductosAdmin(); }
-        else if (tab === 'categorias') { document.getElementById('seccionCategorias').classList.add('active'); cargarCategoriasAdmin(); }
-        else if (tab === 'terminos') { document.getElementById('seccionTerminos').classList.add('active'); }
+function configurarEventosAdmin() {
+    btnCerrarSesion.addEventListener('click', () => {
+        if (confirm('¿Estás seguro de cerrar sesión?')) {
+            pantallaLogin.style.display = 'block';
+            panelAdmin.style.display = 'none';
+            document.getElementById('password').value = '';
+        }
     });
-});
 
-// =============================================
-// BÚSQUEDA
-// =============================================
-if (buscadorAdmin) {
-    buscadorAdmin.addEventListener('input', () => {
-        const texto = buscadorAdmin.value.toLowerCase().trim();
-        if (texto === '') { renderizarListaProductos(todosLosProductosAdmin); return; }
-        const filtrados = todosLosProductosAdmin.filter(p => {
-            return p.nombre.toLowerCase().includes(texto) ||
-                   (p.descripcion && p.descripcion.toLowerCase().includes(texto)) ||
-                   (p.categoriaNombres && p.categoriaNombres.toLowerCase().includes(texto));
+    // Pestañas
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            if (tab === 'productos') { document.getElementById('seccionProductos').classList.add('active'); cargarProductosAdmin(); }
+            else if (tab === 'categorias') { document.getElementById('seccionCategorias').classList.add('active'); cargarCategoriasAdmin(); }
+            else if (tab === 'terminos') { document.getElementById('seccionTerminos').classList.add('active'); }
         });
-        renderizarListaProductos(filtrados);
     });
+
+    // Búsqueda
+    if (buscadorAdmin) {
+        buscadorAdmin.addEventListener('input', () => {
+            const texto = buscadorAdmin.value.toLowerCase().trim();
+            if (texto === '') { renderizarListaProductos(todosLosProductosAdmin); return; }
+            const filtrados = todosLosProductosAdmin.filter(p => {
+                return p.nombre.toLowerCase().includes(texto) ||
+                       (p.descripcion && p.descripcion.toLowerCase().includes(texto)) ||
+                       (p.categoriaNombres && p.categoriaNombres.toLowerCase().includes(texto));
+            });
+            renderizarListaProductos(filtrados);
+        });
+    }
+
+    // Botón agregar URL
+    btnAgregarUrl.addEventListener('click', (e) => { e.preventDefault(); crearCampoUrl(''); });
+
+    // Cancelar edición
+    btnCancelarEdicion.addEventListener('click', resetearFormularioProducto);
+
+    // Form producto
+    formProducto.addEventListener('submit', guardarProducto);
+
+    // Form categoría
+    formCategoria.addEventListener('submit', guardarCategoria);
+    btnCancelarCategoria.addEventListener('click', resetearFormularioCategoria);
+
+    // Términos
+    btnGuardarTerminos.addEventListener('click', guardarTerminos);
 }
 
 // =============================================
@@ -166,21 +203,19 @@ function crearCampoUrl(valor = '') {
     return urlEntry;
 }
 
-btnAgregarUrl.addEventListener('click', (e) => { e.preventDefault(); crearCampoUrl(''); });
-
 // =============================================
-// POSTIMAGES: SUBIDA DIRECTA CON XMLHttpRequest
+// POSTIMAGES: SUBIDA DIRECTA
 // =============================================
 function inicializarPostimagesUpload() {
     if (!postimagesContainer) return;
     
     postimagesContainer.innerHTML = `
         <div class="upload-area" id="dropArea">
-            <input type="file" id="postimagesInput" accept="image/*" style="display:none;">
+            <input type="file" id="postimagesInput" accept="image/*" multiple style="display:none;">
             <div class="upload-content">
                 <span class="upload-icon">📁</span>
                 <p>Arrastra imágenes aquí o <button type="button" id="btnSeleccionarImagen" class="btn-link">selecciona archivos</button></p>
-                <small>JPG, PNG, GIF, WebP • Máx 10MB</small>
+                <small>JPG, PNG, GIF, WebP • Máx 10MB c/u</small>
             </div>
         </div>
     `;
@@ -189,17 +224,13 @@ function inicializarPostimagesUpload() {
     const fileInput = document.getElementById('postimagesInput');
     const btnSeleccionar = document.getElementById('btnSeleccionarImagen');
     
-    // Abrir selector de archivos
     btnSeleccionar.addEventListener('click', (e) => {
         e.preventDefault();
         fileInput.click();
     });
     
-    dropArea.addEventListener('click', () => {
-        fileInput.click();
-    });
+    dropArea.addEventListener('click', () => fileInput.click());
     
-    // Drag & drop
     dropArea.addEventListener('dragover', (e) => {
         e.preventDefault();
         dropArea.classList.add('drag-over');
@@ -212,32 +243,27 @@ function inicializarPostimagesUpload() {
     dropArea.addEventListener('drop', (e) => {
         e.preventDefault();
         dropArea.classList.remove('drag-over');
-        const archivos = e.dataTransfer.files;
-        if (archivos.length > 0) {
-            manejarArchivos(archivos);
+        if (e.dataTransfer.files.length > 0) {
+            manejarArchivos(e.dataTransfer.files);
         }
     });
     
-    // Selección de archivos
     fileInput.addEventListener('change', () => {
         if (fileInput.files.length > 0) {
             manejarArchivos(fileInput.files);
+            fileInput.value = '';
         }
     });
 }
 
-// =============================================
-// MANEJAR ARCHIVOS Y SUBIR A POSTIMAGES
-// =============================================
 async function manejarArchivos(archivos) {
     for (const archivo of archivos) {
-        // Validar
         if (!archivo.type.startsWith('image/')) {
-            alert(`"${archivo.name}" no es una imagen válida.`);
+            alert(`"${archivo.name}" no es una imagen.`);
             continue;
         }
         if (archivo.size > 10 * 1024 * 1024) {
-            alert(`"${archivo.name}" es muy grande. Máx 10MB.`);
+            alert(`"${archivo.name}" es muy grande (máx 10MB).`);
             continue;
         }
         
@@ -246,9 +272,8 @@ async function manejarArchivos(archivos) {
         textoEstadoSubida.style.color = '';
         
         try {
-            const url = await subirAPostimagesXHR(archivo);
+            const url = await subirAPostimages(archivo);
             if (url) {
-                // Pegar URL en el primer campo vacío o crear uno nuevo
                 const campos = document.querySelectorAll('.url-foto');
                 let asignado = false;
                 campos.forEach(campo => {
@@ -264,7 +289,7 @@ async function manejarArchivos(archivos) {
             }
         } catch (error) {
             console.error('Error:', error);
-            textoEstadoSubida.textContent = `❌ Error al subir ${archivo.name}`;
+            textoEstadoSubida.textContent = `❌ Error: ${archivo.name}`;
             textoEstadoSubida.style.color = '#e74c3c';
         }
     }
@@ -275,10 +300,7 @@ async function manejarArchivos(archivos) {
     }, 4000);
 }
 
-// =============================================
-// SUBIR A POSTIMAGES USANDO XMLHttpRequest
-// =============================================
-function subirAPostimagesXHR(archivo) {
+function subirAPostimages(archivo) {
     return new Promise((resolve, reject) => {
         const formData = new FormData();
         formData.append('upload', archivo);
@@ -291,6 +313,7 @@ function subirAPostimagesXHR(archivo) {
             if (xhr.status === 200) {
                 try {
                     const data = JSON.parse(xhr.responseText);
+                    console.log('Postimages respuesta:', data);
                     if (data && data.url) {
                         resolve(data.url);
                     } else if (data && data.image && data.image.url) {
@@ -298,20 +321,17 @@ function subirAPostimagesXHR(archivo) {
                     } else if (data && data.error) {
                         reject(new Error(data.error.message || 'Error del servidor'));
                     } else {
-                        reject(new Error('Formato de respuesta desconocido'));
+                        reject(new Error('Formato desconocido'));
                     }
                 } catch (e) {
-                    reject(new Error('Error al parsear respuesta'));
+                    reject(new Error('Error al leer respuesta'));
                 }
             } else {
                 reject(new Error(`Error HTTP: ${xhr.status}`));
             }
         };
         
-        xhr.onerror = function() {
-            reject(new Error('Error de red'));
-        };
-        
+        xhr.onerror = () => reject(new Error('Error de red'));
         xhr.send(formData);
     });
 }
@@ -340,7 +360,7 @@ async function cargarCategoriasEnCheckboxes() {
 // =============================================
 // GUARDAR PRODUCTO
 // =============================================
-formProducto.addEventListener('submit', async (e) => {
+async function guardarProducto(e) {
     e.preventDefault();
     const nombre = document.getElementById('nombre').value.trim();
     const precio = parseFloat(document.getElementById('precio').value);
@@ -372,7 +392,7 @@ formProducto.addEventListener('submit', async (e) => {
         resetearFormularioProducto();
         cargarProductosAdmin();
     } catch (error) { console.error('Error:', error); alert('❌ Error al guardar'); }
-});
+}
 
 function resetearFormularioProducto() {
     formProducto.reset();
@@ -383,7 +403,6 @@ function resetearFormularioProducto() {
     crearCampoUrl('');
     document.querySelectorAll('.checkbox-categoria').forEach(cb => cb.checked = false);
 }
-btnCancelarEdicion.addEventListener('click', resetearFormularioProducto);
 
 // =============================================
 // CARGAR PRODUCTOS
@@ -482,7 +501,7 @@ async function eliminarProducto(id) {
 // =============================================
 // CATEGORÍAS
 // =============================================
-formCategoria.addEventListener('submit', async (e) => {
+async function guardarCategoria(e) {
     e.preventDefault();
     const nombre = nombreCategoriaInput.value.trim();
     const id = categoriaIdInput.value;
@@ -492,13 +511,12 @@ formCategoria.addEventListener('submit', async (e) => {
         else { await db.collection('categorias').add({ nombre, fechaCreacion: firebase.firestore.FieldValue.serverTimestamp() }); alert('✅ Agregada'); }
         resetearFormularioCategoria(); cargarCategoriasAdmin(); cargarCategoriasEnCheckboxes();
     } catch (error) { console.error('Error:', error); alert('❌ Error'); }
-});
+}
 
 function resetearFormularioCategoria() {
     formCategoria.reset(); categoriaIdInput.value = '';
     tituloFormCategoria.textContent = 'Agregar Categoría'; btnCancelarCategoria.style.display = 'none';
 }
-btnCancelarCategoria.addEventListener('click', resetearFormularioCategoria);
 
 async function cargarCategoriasAdmin() {
     try {
@@ -540,11 +558,12 @@ async function cargarTerminosAdmin() {
         if (doc.exists) terminosTexto.value = doc.data().texto;
     } catch (error) { console.error('Error:', error); }
 }
-btnGuardarTerminos.addEventListener('click', async () => {
+
+async function guardarTerminos() {
     const texto = terminosTexto.value.trim();
     if (!texto) { alert('No puede estar vacío'); return; }
     try {
         await db.collection('configuracion').doc('terminos').set({ texto, fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp() });
         alert('✅ Términos actualizados');
     } catch (error) { console.error('Error:', error); alert('❌ Error'); }
-});
+}
