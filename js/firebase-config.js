@@ -12,9 +12,8 @@ const firebaseConfig = {
   measurementId: "G-ST4E7435WY"
 };
 
-// Inicializar Firebase
+// Inicializar Firebase (solo Firestore, sin Storage)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const storage = firebase.storage();
 
 console.log("🔥 OmniSV - Firebase inicializado correctamente");
