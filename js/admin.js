@@ -5,7 +5,6 @@
 const ADMIN_USER = "omnisv";
 const ADMIN_PASS = "omniSV_26";
 
-// Elementos del DOM
 const pantallaLogin = document.getElementById('pantallaLogin');
 const panelAdmin = document.getElementById('panelAdmin');
 const formLogin = document.getElementById('formLogin');
@@ -14,7 +13,6 @@ const btnCerrarSesion = document.getElementById('btnCerrarSesion');
 const btnTemaAdmin = document.getElementById('btnTemaAdmin');
 const recordarmeCheck = document.getElementById('recordarme');
 
-// Productos
 const formProducto = document.getElementById('formProducto');
 const productoId = document.getElementById('productoId');
 const tituloFormProducto = document.getElementById('tituloFormProducto');
@@ -25,12 +23,10 @@ const checkboxesCategorias = document.getElementById('checkboxesCategorias');
 const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
 const buscadorAdmin = document.getElementById('buscadorAdmin');
 
-// Subida de imágenes
 const inputFileOculto = document.getElementById('inputFileOculto');
 const estadoSubida = document.getElementById('estadoSubida');
 const textoEstadoSubida = document.getElementById('textoEstadoSubida');
 
-// Categorías
 const formCategoria = document.getElementById('formCategoria');
 const categoriaIdInput = document.getElementById('categoriaId');
 const nombreCategoriaInput = document.getElementById('nombreCategoria');
@@ -39,15 +35,14 @@ const btnGuardarCategoria = document.getElementById('btnGuardarCategoria');
 const btnCancelarCategoria = document.getElementById('btnCancelarCategoria');
 const listaCategoriasAdmin = document.getElementById('listaCategoriasAdmin');
 
-// Términos
 const btnGuardarTerminos = document.getElementById('btnGuardarTerminos');
 const terminosTexto = document.getElementById('terminosTexto');
 
 let todosLosProductosAdmin = [];
-let campoInputActivo = null; // Campo de URL que recibirá la imagen subida
+let campoInputActivo = null;
 
 // =============================================
-// TEMA OSCURO/CLARO
+// TEMA
 // =============================================
 function toggleTema() {
     const html = document.documentElement;
@@ -56,16 +51,12 @@ function toggleTema() {
     html.setAttribute('data-theme', nuevoTema);
     localStorage.setItem('tema', nuevoTema);
 }
-
 const temaGuardado = localStorage.getItem('tema') || 'light';
 document.documentElement.setAttribute('data-theme', temaGuardado);
-
-if (btnTemaAdmin) {
-    btnTemaAdmin.addEventListener('click', toggleTema);
-}
+if (btnTemaAdmin) btnTemaAdmin.addEventListener('click', toggleTema);
 
 // =============================================
-// RECORDARME - AUTO LOGIN
+// RECORDARME
 // =============================================
 document.addEventListener('DOMContentLoaded', () => {
     const credencialesGuardadas = localStorage.getItem('omnisv_credenciales');
@@ -74,13 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('usuario').value = usuario;
         document.getElementById('password').value = password;
         recordarmeCheck.checked = true;
-        
-        if (usuario === ADMIN_USER && password === ADMIN_PASS) {
-            iniciarSesion();
-        }
+        if (usuario === ADMIN_USER && password === ADMIN_PASS) iniciarSesion();
     }
-    
-    // Crear el primer campo de URL al cargar
     crearCampoUrl('');
 });
 
@@ -89,10 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // =============================================
 formLogin.addEventListener('submit', (e) => {
     e.preventDefault();
-    
     const usuario = document.getElementById('usuario').value.trim();
     const password = document.getElementById('password').value.trim();
-    
     if (usuario === ADMIN_USER && password === ADMIN_PASS) {
         if (recordarmeCheck.checked) {
             localStorage.setItem('omnisv_credenciales', JSON.stringify({ usuario, password }));
@@ -110,17 +94,11 @@ function iniciarSesion() {
     pantallaLogin.style.display = 'none';
     panelAdmin.style.display = 'block';
     errorLogin.style.display = 'none';
-    
-    // Asegurar que hay al menos un campo de URL
-    if (document.querySelectorAll('.url-entry').length === 0) {
-        crearCampoUrl('');
-    }
-    
+    if (document.querySelectorAll('.url-entry').length === 0) crearCampoUrl('');
     cargarCategoriasEnCheckboxes();
     cargarProductosAdmin();
     cargarCategoriasAdmin();
     cargarTerminosAdmin();
-    
     document.getElementById('usuario').value = '';
     document.getElementById('password').value = '';
 }
@@ -139,51 +117,33 @@ btnCerrarSesion.addEventListener('click', () => {
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         const tab = btn.dataset.tab;
-        
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-        
-        if (tab === 'productos') {
-            document.getElementById('seccionProductos').classList.add('active');
-            cargarProductosAdmin();
-        } else if (tab === 'categorias') {
-            document.getElementById('seccionCategorias').classList.add('active');
-            cargarCategoriasAdmin();
-        } else if (tab === 'terminos') {
-            document.getElementById('seccionTerminos').classList.add('active');
-        }
+        if (tab === 'productos') { document.getElementById('seccionProductos').classList.add('active'); cargarProductosAdmin(); }
+        else if (tab === 'categorias') { document.getElementById('seccionCategorias').classList.add('active'); cargarCategoriasAdmin(); }
+        else if (tab === 'terminos') { document.getElementById('seccionTerminos').classList.add('active'); }
     });
 });
 
 // =============================================
-// BÚSQUEDA DE PRODUCTOS EN ADMIN
+// BÚSQUEDA
 // =============================================
 if (buscadorAdmin) {
     buscadorAdmin.addEventListener('input', () => {
         const texto = buscadorAdmin.value.toLowerCase().trim();
-        filtrarProductosAdmin(texto);
+        if (texto === '') { renderizarListaProductos(todosLosProductosAdmin); return; }
+        const filtrados = todosLosProductosAdmin.filter(p => {
+            return p.nombre.toLowerCase().includes(texto) ||
+                   (p.descripcion && p.descripcion.toLowerCase().includes(texto)) ||
+                   (p.categoriaNombres && p.categoriaNombres.toLowerCase().includes(texto));
+        });
+        renderizarListaProductos(filtrados);
     });
-}
-
-function filtrarProductosAdmin(texto) {
-    if (texto === '') {
-        renderizarListaProductos(todosLosProductosAdmin);
-        return;
-    }
-    
-    const filtrados = todosLosProductosAdmin.filter(producto => {
-        return producto.nombre.toLowerCase().includes(texto) ||
-               (producto.descripcion && producto.descripcion.toLowerCase().includes(texto)) ||
-               (producto.categoriaNombres && producto.categoriaNombres.toLowerCase().includes(texto));
-    });
-    
-    renderizarListaProductos(filtrados);
 }
 
 // =============================================
-// CREAR CAMPO DE URL CON BOTÓN DE SUBIR
+// CREAR CAMPO URL
 // =============================================
 function crearCampoUrl(valor = '') {
     const urlEntry = document.createElement('div');
@@ -194,18 +154,16 @@ function crearCampoUrl(valor = '') {
         <button type="button" class="btn-eliminar-url" title="Eliminar campo">✕</button>
     `;
     
-    // Evento para el botón 📤
     const btnSubir = urlEntry.querySelector('.btn-subir-foto');
     const inputUrl = urlEntry.querySelector('.url-foto');
     
     btnSubir.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        campoInputActivo = inputUrl; // Guardar referencia al input
-        inputFileOculto.click(); // Abrir selector de archivos
+        campoInputActivo = inputUrl;
+        inputFileOculto.click();
     });
     
-    // Evento para eliminar
     const btnEliminar = urlEntry.querySelector('.btn-eliminar-url');
     btnEliminar.addEventListener('click', function() {
         if (document.querySelectorAll('.url-entry').length > 1) {
@@ -219,39 +177,49 @@ function crearCampoUrl(valor = '') {
     return urlEntry;
 }
 
-// Botón + Agregar URL manual
-btnAgregarUrl.addEventListener('click', function(e) {
-    e.preventDefault();
-    crearCampoUrl('');
-});
+btnAgregarUrl.addEventListener('click', (e) => { e.preventDefault(); crearCampoUrl(''); });
 
 // =============================================
-// SUBIR IMAGEN A POSTIMAGES
+// SUBIR IMAGEN A POSTIMAGES (CON DEPURACIÓN DETALLADA)
 // =============================================
 inputFileOculto.addEventListener('change', async function() {
     const archivo = this.files[0];
-    
     if (!archivo) return;
     
-    // Validar que sea imagen
+    // MOSTRAR INFORMACIÓN DEL ARCHIVO
+    console.log('═══════════════════════════════════');
+    console.log('📁 INFORMACIÓN DEL ARCHIVO:');
+    console.log('  Nombre:', archivo.name);
+    console.log('  Tipo:', archivo.type);
+    console.log('  Tamaño:', (archivo.size / 1024).toFixed(2), 'KB');
+    console.log('  Última modificación:', new Date(archivo.lastModified).toLocaleString());
+    console.log('═══════════════════════════════════');
+    
+    // Validar tipo
     if (!archivo.type.startsWith('image/')) {
-        alert('❌ Por favor selecciona una imagen (JPG, PNG, GIF, WebP).');
+        console.error('❌ ERROR: El archivo NO es una imagen. Tipo detectado:', archivo.type);
+        alert('❌ Selecciona una imagen (JPG, PNG, GIF, WebP). El archivo seleccionado es: ' + archivo.type);
         this.value = '';
         return;
     }
     
-    // Validar tamaño (máximo 10MB)
+    // Validar tamaño
     if (archivo.size > 10 * 1024 * 1024) {
-        alert('❌ La imagen es demasiado grande. Máximo 10MB.');
+        console.error('❌ ERROR: Imagen demasiado grande:', (archivo.size / 1024 / 1024).toFixed(2), 'MB');
+        alert('❌ Imagen demasiado grande. Máximo 10MB.');
         this.value = '';
         return;
     }
     
-    // Mostrar estado
     estadoSubida.style.display = 'block';
-    textoEstadoSubida.textContent = '⏳ Subiendo imagen a Postimages...';
+    textoEstadoSubida.textContent = '⏳ Subiendo a Postimages...';
+    textoEstadoSubida.style.color = '';
+    
+    // INTENTO 1: POSTIMAGES API JSON
+    let urlImagen = '';
     
     try {
+        console.log('🔵 INTENTO 1: Subiendo a postimages.org/json/rr...');
         const formData = new FormData();
         formData.append('upload', archivo);
         formData.append('format', 'json');
@@ -261,61 +229,137 @@ inputFileOculto.addEventListener('change', async function() {
             body: formData
         });
         
-        if (!respuesta.ok) {
-            throw new Error('Error en la respuesta del servidor');
+        console.log('  Status:', respuesta.status, respuesta.statusText);
+        console.log('  Headers:', Object.fromEntries(respuesta.headers.entries()));
+        
+        const textoRespuesta = await respuesta.text();
+        console.log('  Respuesta cruda (primeros 500 chars):', textoRespuesta.substring(0, 500));
+        
+        let data;
+        try {
+            data = JSON.parse(textoRespuesta);
+            console.log('  ✅ JSON parseado correctamente:', data);
+        } catch (parseError) {
+            console.error('  ❌ No se pudo parsear JSON:', parseError.message);
+            console.error('  Respuesta completa:', textoRespuesta);
+            throw new Error('Respuesta no es JSON válido');
         }
-        
-        const data = await respuesta.json();
-        console.log('Respuesta de Postimages:', data);
-        
-        let urlImagen = '';
         
         if (data && data.image && data.image.url) {
             urlImagen = data.image.url;
+            console.log('  ✅ URL obtenida:', urlImagen);
         } else if (data && data.url) {
             urlImagen = data.url;
-        } else if (data && data.image && data.image.link) {
-            urlImagen = data.image.link;
-        }
-        
-        if (urlImagen) {
-            // Asignar al campo activo
-            if (campoInputActivo) {
-                campoInputActivo.value = urlImagen;
-                textoEstadoSubida.textContent = '✅ ¡Imagen subida! URL pegada en el campo.';
-            } else {
-                // Buscar el primer campo vacío
-                const campos = document.querySelectorAll('.url-foto');
-                let asignado = false;
-                campos.forEach(campo => {
-                    if (campo.value.trim() === '' && !asignado) {
-                        campo.value = urlImagen;
-                        asignado = true;
-                    }
-                });
-                
-                if (!asignado) {
-                    crearCampoUrl(urlImagen);
-                }
-                
-                textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
-            }
+            console.log('  ✅ URL obtenida (alternativa):', urlImagen);
+        } else if (data && data.error) {
+            console.error('  ❌ Postimages devolvió error:', data.error);
+            throw new Error(data.error);
         } else {
-            console.error('Formato de respuesta inesperado:', data);
-            throw new Error('No se pudo obtener la URL');
+            console.error('  ❌ Formato de respuesta desconocido');
+            throw new Error('Formato desconocido');
         }
         
-    } catch (error) {
-        console.error('Error:', error);
-        textoEstadoSubida.textContent = '❌ Error al subir. Intenta con otra imagen.';
+    } catch (errorPost) {
+        console.error('❌ FALLÓ POSTIMAGES API JSON:', errorPost.message);
+        console.log('🔵 INTENTO 2: Probando otro endpoint de Postimages...');
+        
+        // INTENTO 2: OTRO ENDPOINT
+        try {
+            const formData2 = new FormData();
+            formData2.append('file', archivo);
+            formData2.append('upload', archivo);
+            
+            const respuesta2 = await fetch('https://postimages.org/upload', {
+                method: 'POST',
+                body: formData2
+            });
+            
+            console.log('  Status intento 2:', respuesta2.status);
+            const texto2 = await respuesta2.text();
+            console.log('  Respuesta intento 2 (primeros 500 chars):', texto2.substring(0, 500));
+            
+            // Buscar URL en la respuesta HTML
+            const match = texto2.match(/https:\/\/i\.postimg\.cc\/[^\s"']+/);
+            if (match) {
+                urlImagen = match[0];
+                console.log('  ✅ URL encontrada en HTML:', urlImagen);
+            } else {
+                console.warn('  ⚠️ No se encontró URL en la respuesta');
+            }
+        } catch (errorPost2) {
+            console.error('❌ FALLÓ SEGUNDO INTENTO:', errorPost2.message);
+        }
     }
     
-    // Ocultar mensaje después de 3 segundos
-    setTimeout(function() {
-        estadoSubida.style.display = 'none';
-    }, 3000);
+    // SI TODO FALLÓ, PROBAR IMGBB
+    if (!urlImagen) {
+        console.log('🟠 INTENTO 3: Probando ImgBB como respaldo...');
+        try {
+            const formData3 = new FormData();
+            formData3.append('image', archivo);
+            
+            const respuesta3 = await fetch('https://api.imgbb.com/1/upload?key=4fbf1f4b2fb63db7ed4f4a8e2b2b5f90', {
+                method: 'POST',
+                body: formData3
+            });
+            
+            console.log('  Status ImgBB:', respuesta3.status);
+            const data3 = await respuesta3.json();
+            console.log('  Respuesta ImgBB:', data3);
+            
+            if (data3 && data3.success && data3.data && data3.data.url) {
+                urlImagen = data3.data.url;
+                console.log('  ✅ URL ImgBB:', urlImagen);
+            }
+        } catch (errorImgBB) {
+            console.error('❌ FALLÓ IMGBB:', errorImgBB.message);
+        }
+    }
     
-    // Limpiar
+    // RESULTADO FINAL
+    console.log('═══════════════════════════════════');
+    if (urlImagen) {
+        console.log('✅ ÉXITO - URL FINAL:', urlImagen);
+        
+        if (campoInputActivo) {
+            campoInputActivo.value = urlImagen;
+            console.log('  Asignada al campo activo');
+        } else {
+            const campos = document.querySelectorAll('.url-foto');
+            let asignado = false;
+            campos.forEach(campo => {
+                if (campo.value.trim() === '' && !asignado) {
+                    campo.value = urlImagen;
+                    asignado = true;
+                    console.log('  Asignada al primer campo vacío');
+                }
+            });
+            if (!asignado) {
+                crearCampoUrl(urlImagen);
+                console.log('  Creado nuevo campo con la URL');
+            }
+        }
+        
+        textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
+        textoEstadoSubida.style.color = '#27ae60';
+    } else {
+        console.error('❌ FRACASO - Ningún método funcionó');
+        console.log('  Verifica:');
+        console.log('  1. ¿Tienes conexión a internet?');
+        console.log('  2. ¿Hay algún bloqueador (AdBlock, firewall)?');
+        console.log('  3. ¿El archivo es realmente una imagen?');
+        console.log('  4. ¿El tamaño es menor a 10MB?');
+        
+        textoEstadoSubida.textContent = '❌ Error al subir. Abre F12 > Console para ver detalles.';
+        textoEstadoSubida.style.color = '#e74c3c';
+    }
+    console.log('═══════════════════════════════════');
+    
+    setTimeout(() => {
+        estadoSubida.style.display = 'none';
+        textoEstadoSubida.style.color = '';
+    }, 6000);
+    
     this.value = '';
     campoInputActivo = null;
 });
@@ -327,33 +371,25 @@ async function cargarCategoriasEnCheckboxes() {
     try {
         const snapshot = await db.collection('categorias').orderBy('nombre').get();
         checkboxesCategorias.innerHTML = '';
-        
         if (snapshot.empty) {
             checkboxesCategorias.innerHTML = '<p class="info-text">No hay categorías. Agrégalas en la pestaña Categorías.</p>';
             return;
         }
-        
         snapshot.forEach(doc => {
             const categoria = doc.data();
             const div = document.createElement('div');
             div.classList.add('checkbox-item');
-            div.innerHTML = `
-                <input type="checkbox" id="cat_${doc.id}" value="${doc.id}" class="checkbox-categoria">
-                <label for="cat_${doc.id}">${categoria.nombre}</label>
-            `;
+            div.innerHTML = `<input type="checkbox" id="cat_${doc.id}" value="${doc.id}" class="checkbox-categoria"><label for="cat_${doc.id}">${categoria.nombre}</label>`;
             checkboxesCategorias.appendChild(div);
         });
-    } catch (error) {
-        console.error('Error al cargar categorías:', error);
-    }
+    } catch (error) { console.error('Error:', error); }
 }
 
 // =============================================
-// GUARDAR / EDITAR PRODUCTO
+// GUARDAR PRODUCTO
 // =============================================
 formProducto.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const nombre = document.getElementById('nombre').value.trim();
     const precio = parseFloat(document.getElementById('precio').value);
     const descripcion = document.getElementById('descripcion').value.trim();
@@ -362,58 +398,28 @@ formProducto.addEventListener('submit', async (e) => {
     const checkboxes = document.querySelectorAll('.checkbox-categoria:checked');
     const categorias = [];
     checkboxes.forEach(cb => categorias.push(cb.value));
-    
-    if (categorias.length === 0) {
-        alert('Debe seleccionar al menos una categoría');
-        return;
-    }
+    if (categorias.length === 0) { alert('Selecciona al menos una categoría'); return; }
     
     const inputsUrl = document.querySelectorAll('.url-foto');
     const fotos = [];
-    inputsUrl.forEach(input => {
-        const valor = input.value.trim();
-        if (valor !== '') fotos.push(valor);
-    });
+    inputsUrl.forEach(input => { const v = input.value.trim(); if (v !== '') fotos.push(v); });
+    if (fotos.length === 0) { alert('Agrega al menos una foto'); return; }
     
-    if (fotos.length === 0) {
-        alert('Debe agregar al menos una foto (URL o subir desde PC)');
-        return;
-    }
-    
-    const productoData = {
-        nombre,
-        precio,
-        descripcion,
-        categorias,
-        fotos,
-        fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-    };
+    const productoData = { nombre, precio, descripcion, categorias, fotos, fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp() };
     
     try {
-        const btnSubmit = formProducto.querySelector('button[type="submit"]');
-        btnSubmit.disabled = true;
-        btnSubmit.textContent = 'Guardando...';
-        
         if (id) {
             await db.collection('productos').doc(id).update(productoData);
-            alert('✅ Producto actualizado exitosamente');
+            alert('✅ Producto actualizado');
         } else {
             productoData.fechaCreacion = firebase.firestore.FieldValue.serverTimestamp();
             productoData.activo = true;
             await db.collection('productos').add(productoData);
-            alert('✅ Producto guardado exitosamente');
+            alert('✅ Producto guardado');
         }
-        
         resetearFormularioProducto();
         cargarProductosAdmin();
-        
-        btnSubmit.disabled = false;
-        btnSubmit.textContent = '💾 Guardar Producto';
-        
-    } catch (error) {
-        console.error('Error al guardar:', error);
-        alert('❌ Error al guardar el producto');
-    }
+    } catch (error) { console.error('Error:', error); alert('❌ Error al guardar'); }
 });
 
 function resetearFormularioProducto() {
@@ -421,81 +427,50 @@ function resetearFormularioProducto() {
     productoId.value = '';
     tituloFormProducto.textContent = 'Agregar Producto';
     btnCancelarEdicion.style.display = 'none';
-    
-    // Limpiar y dejar un solo campo
     contenedorUrls.innerHTML = '';
     crearCampoUrl('');
-    
     document.querySelectorAll('.checkbox-categoria').forEach(cb => cb.checked = false);
 }
-
 btnCancelarEdicion.addEventListener('click', resetearFormularioProducto);
 
 // =============================================
-// CARGAR PRODUCTOS EN PANEL ADMIN
+// CARGAR PRODUCTOS
 // =============================================
 async function cargarProductosAdmin() {
     try {
         const snapshot = await db.collection('productos').orderBy('fechaCreacion', 'desc').get();
         todosLosProductosAdmin = [];
-        
         const catSnapshot = await db.collection('categorias').get();
         const categoriasMap = {};
-        catSnapshot.forEach(doc => {
-            categoriasMap[doc.id] = doc.data().nombre;
-        });
+        catSnapshot.forEach(doc => { categoriasMap[doc.id] = doc.data().nombre; });
         
-        if (snapshot.empty) {
-            listaProductosAdmin.innerHTML = '<p class="vacio">No hay productos aún. ¡Agrega el primero!</p>';
-            return;
-        }
+        if (snapshot.empty) { listaProductosAdmin.innerHTML = '<p class="vacio">No hay productos aún.</p>'; return; }
         
         snapshot.forEach(doc => {
-            const producto = doc.data();
-            const categoriasNombres = producto.categorias 
-                ? producto.categorias.map(id => categoriasMap[id] || id).join(', ')
-                : 'Sin categoría';
-            
-            todosLosProductosAdmin.push({
-                id: doc.id,
-                ...producto,
-                categoriaNombres: categoriasNombres
-            });
+            const p = doc.data();
+            const cats = p.categorias ? p.categorias.map(id => categoriasMap[id] || id).join(', ') : 'Sin categoría';
+            todosLosProductosAdmin.push({ id: doc.id, ...p, categoriaNombres: cats });
         });
-        
         renderizarListaProductos(todosLosProductosAdmin);
-        
-    } catch (error) {
-        console.error('Error:', error);
-        listaProductosAdmin.innerHTML = '<p class="error">Error al cargar productos</p>';
-    }
+    } catch (error) { console.error('Error:', error); }
 }
 
 function renderizarListaProductos(productos) {
     listaProductosAdmin.innerHTML = '';
-    
-    if (productos.length === 0) {
-        listaProductosAdmin.innerHTML = '<p class="vacio">No se encontraron productos.</p>';
-        return;
-    }
+    if (productos.length === 0) { listaProductosAdmin.innerHTML = '<p class="vacio">No se encontraron productos.</p>'; return; }
     
     productos.forEach(producto => {
         const activo = producto.activo !== false;
         const estadoClass = activo ? 'estado-activo' : 'estado-inactivo';
         const estadoTexto = activo ? 'Activo' : 'Inactivo';
         const toggleIcon = activo ? '👁️' : '🚫';
-        const toggleTitle = activo ? 'Inhabilitar producto' : 'Habilitar producto';
+        const toggleTitle = activo ? 'Inhabilitar' : 'Habilitar';
         
         const div = document.createElement('div');
         div.classList.add('producto-admin-item');
         if (!activo) div.style.opacity = '0.6';
-        
         div.innerHTML = `
-            <img src="${producto.fotos[0]}" 
-                 alt="${producto.nombre}" 
-                 class="thumb-admin" 
-                 onerror="this.src='https://via.placeholder.com/80?text=Sin+Img'"
-                 style="object-fit: contain; background: #f0f0f0;">
+            <img src="${producto.fotos[0]}" alt="${producto.nombre}" class="thumb-admin" onerror="this.src='https://via.placeholder.com/80?text=Sin+Img'" style="object-fit:contain;background:#f0f0f0;">
             <div class="info-admin">
                 <strong>${producto.nombre}</strong>
                 <span>$${producto.precio.toFixed(2)}</span>
@@ -504,136 +479,70 @@ function renderizarListaProductos(productos) {
                 <span class="estado-producto ${estadoClass}">${estadoTexto}</span>
             </div>
             <div class="acciones-admin">
-                <button class="btn-toggle" onclick="toggleProducto('${producto.id}', ${activo})" title="${toggleTitle}">
-                    ${toggleIcon}
-                </button>
+                <button class="btn-toggle" onclick="toggleProducto('${producto.id}', ${activo})" title="${toggleTitle}">${toggleIcon}</button>
                 <button class="btn-editar" onclick="editarProducto('${producto.id}')" title="Editar">✏️</button>
                 <button class="btn-eliminar" onclick="eliminarProducto('${producto.id}')" title="Eliminar">🗑️</button>
-            </div>
-        `;
+            </div>`;
         listaProductosAdmin.appendChild(div);
     });
 }
 
 // =============================================
-// INHABILITAR / HABILITAR PRODUCTO
+// TOGGLE / EDITAR / ELIMINAR PRODUCTO
 // =============================================
 async function toggleProducto(id, estadoActual) {
-    const nuevoEstado = !estadoActual;
-    const accion = nuevoEstado ? 'habilitar' : 'inhabilitar';
-    
-    if (!confirm(`¿Estás seguro de ${accion} este producto?`)) return;
-    
+    if (!confirm(`¿${estadoActual ? 'Inhabilitar' : 'Habilitar'} este producto?`)) return;
     try {
-        await db.collection('productos').doc(id).update({
-            activo: nuevoEstado,
-            fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        alert(`✅ Producto ${nuevoEstado ? 'habilitado' : 'inhabilitado'} exitosamente`);
+        await db.collection('productos').doc(id).update({ activo: !estadoActual, fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp() });
+        alert('✅ Estado actualizado');
         cargarProductosAdmin();
-        
-    } catch (error) {
-        console.error('Error:', error);
-        alert('❌ Error al cambiar el estado del producto');
-    }
+    } catch (error) { console.error('Error:', error); alert('❌ Error'); }
 }
 
-// =============================================
-// EDITAR PRODUCTO
-// =============================================
 async function editarProducto(id) {
     try {
         const doc = await db.collection('productos').doc(id).get();
-        if (!doc.exists) {
-            alert('Producto no encontrado');
-            return;
-        }
-        
-        const producto = doc.data();
-        
+        if (!doc.exists) { alert('Producto no encontrado'); return; }
+        const p = doc.data();
         productoId.value = id;
-        document.getElementById('nombre').value = producto.nombre;
-        document.getElementById('precio').value = producto.precio;
-        document.getElementById('descripcion').value = producto.descripcion || '';
-        
-        // Reconstruir campos de URL
+        document.getElementById('nombre').value = p.nombre;
+        document.getElementById('precio').value = p.precio;
+        document.getElementById('descripcion').value = p.descripcion || '';
         contenedorUrls.innerHTML = '';
-        if (producto.fotos && producto.fotos.length > 0) {
-            producto.fotos.forEach(url => {
-                crearCampoUrl(url);
-            });
-        } else {
-            crearCampoUrl('');
-        }
-        
+        if (p.fotos && p.fotos.length > 0) { p.fotos.forEach(url => crearCampoUrl(url)); }
+        else { crearCampoUrl(''); }
         await cargarCategoriasEnCheckboxes();
         setTimeout(() => {
-            document.querySelectorAll('.checkbox-categoria').forEach(cb => {
-                cb.checked = producto.categorias && producto.categorias.includes(cb.value);
-            });
+            document.querySelectorAll('.checkbox-categoria').forEach(cb => { cb.checked = p.categorias && p.categorias.includes(cb.value); });
         }, 300);
-        
         tituloFormProducto.textContent = 'Editar Producto';
         btnCancelarEdicion.style.display = 'inline-block';
-        
         document.querySelector('.form-container').scrollIntoView({ behavior: 'smooth' });
-        
-    } catch (error) {
-        console.error('Error al editar:', error);
-        alert('❌ Error al cargar producto para editar');
-    }
+    } catch (error) { console.error('Error:', error); alert('❌ Error al cargar producto'); }
 }
 
-// =============================================
-// ELIMINAR PRODUCTO
-// =============================================
 async function eliminarProducto(id) {
-    if (confirm('¿Estás seguro de ELIMINAR PERMANENTEMENTE este producto?')) {
-        try {
-            await db.collection('productos').doc(id).delete();
-            alert('✅ Producto eliminado');
-            cargarProductosAdmin();
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error al eliminar');
-        }
+    if (confirm('¿Eliminar PERMANENTEMENTE este producto?')) {
+        try { await db.collection('productos').doc(id).delete(); alert('✅ Eliminado'); cargarProductosAdmin(); }
+        catch (error) { console.error('Error:', error); alert('❌ Error'); }
     }
 }
 
 // =============================================
-// GESTIÓN DE CATEGORÍAS
+// CATEGORÍAS
 // =============================================
 formCategoria.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     const nombre = nombreCategoriaInput.value.trim();
     const id = categoriaIdInput.value;
-    
-    if (!nombre) {
-        alert('El nombre de la categoría es requerido');
-        return;
-    }
-    
+    if (!nombre) { alert('Nombre requerido'); return; }
     try {
-        if (id) {
-            await db.collection('categorias').doc(id).update({ nombre });
-            alert('✅ Categoría actualizada');
-        } else {
-            await db.collection('categorias').add({ 
-                nombre,
-                fechaCreacion: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            alert('✅ Categoría agregada');
-        }
-        
+        if (id) { await db.collection('categorias').doc(id).update({ nombre }); alert('✅ Actualizada'); }
+        else { await db.collection('categorias').add({ nombre, fechaCreacion: firebase.firestore.FieldValue.serverTimestamp() }); alert('✅ Agregada'); }
         resetearFormularioCategoria();
         cargarCategoriasAdmin();
         cargarCategoriasEnCheckboxes();
-    } catch (error) {
-        console.error('Error:', error);
-        alert('❌ Error al guardar categoría');
-    }
+    } catch (error) { console.error('Error:', error); alert('❌ Error'); }
 });
 
 function resetearFormularioCategoria() {
@@ -642,38 +551,26 @@ function resetearFormularioCategoria() {
     tituloFormCategoria.textContent = 'Agregar Categoría';
     btnCancelarCategoria.style.display = 'none';
 }
-
 btnCancelarCategoria.addEventListener('click', resetearFormularioCategoria);
 
 async function cargarCategoriasAdmin() {
     try {
         const snapshot = await db.collection('categorias').orderBy('nombre').get();
         listaCategoriasAdmin.innerHTML = '';
-        
-        if (snapshot.empty) {
-            listaCategoriasAdmin.innerHTML = '<p class="vacio">No hay categorías aún.</p>';
-            return;
-        }
-        
+        if (snapshot.empty) { listaCategoriasAdmin.innerHTML = '<p class="vacio">No hay categorías.</p>'; return; }
         snapshot.forEach(doc => {
-            const categoria = doc.data();
+            const c = doc.data();
             const div = document.createElement('div');
             div.classList.add('categoria-admin-item');
             div.innerHTML = `
-                <div class="info-categoria">
-                    <strong>🏷️ ${categoria.nombre}</strong>
-                </div>
+                <div class="info-categoria"><strong>🏷️ ${c.nombre}</strong></div>
                 <div class="acciones-admin">
-                    <button class="btn-editar" onclick="editarCategoria('${doc.id}', '${categoria.nombre.replace(/'/g, "\\'")}')" title="Editar">✏️</button>
-                    <button class="btn-eliminar" onclick="eliminarCategoria('${doc.id}')" title="Eliminar">🗑️</button>
-                </div>
-            `;
+                    <button class="btn-editar" onclick="editarCategoria('${doc.id}', '${c.nombre.replace(/'/g, "\\'")}')">✏️</button>
+                    <button class="btn-eliminar" onclick="eliminarCategoria('${doc.id}')">🗑️</button>
+                </div>`;
             listaCategoriasAdmin.appendChild(div);
         });
-    } catch (error) {
-        console.error('Error:', error);
-        listaCategoriasAdmin.innerHTML = '<p class="error">Error al cargar categorías</p>';
-    }
+    } catch (error) { console.error('Error:', error); }
 }
 
 function editarCategoria(id, nombre) {
@@ -681,52 +578,28 @@ function editarCategoria(id, nombre) {
     nombreCategoriaInput.value = nombre;
     tituloFormCategoria.textContent = 'Editar Categoría';
     btnCancelarCategoria.style.display = 'inline-block';
-    document.querySelector('#seccionCategorias .form-container').scrollIntoView({ behavior: 'smooth' });
 }
-
 async function eliminarCategoria(id) {
-    if (confirm('¿Estás seguro de eliminar esta categoría?')) {
-        try {
-            await db.collection('categorias').doc(id).delete();
-            alert('✅ Categoría eliminada');
-            cargarCategoriasAdmin();
-            cargarCategoriasEnCheckboxes();
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error al eliminar');
-        }
+    if (confirm('¿Eliminar esta categoría?')) {
+        try { await db.collection('categorias').doc(id).delete(); alert('✅ Eliminada'); cargarCategoriasAdmin(); cargarCategoriasEnCheckboxes(); }
+        catch (error) { console.error('Error:', error); alert('❌ Error'); }
     }
 }
 
 // =============================================
-// TÉRMINOS Y CONDICIONES
+// TÉRMINOS
 // =============================================
 async function cargarTerminosAdmin() {
     try {
         const doc = await db.collection('configuracion').doc('terminos').get();
-        if (doc.exists) {
-            terminosTexto.value = doc.data().texto;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
+        if (doc.exists) terminosTexto.value = doc.data().texto;
+    } catch (error) { console.error('Error:', error); }
 }
-
 btnGuardarTerminos.addEventListener('click', async () => {
     const texto = terminosTexto.value.trim();
-    if (!texto) {
-        alert('Los términos no pueden estar vacíos');
-        return;
-    }
-    
+    if (!texto) { alert('No puede estar vacío'); return; }
     try {
-        await db.collection('configuracion').doc('terminos').set({
-            texto,
-            fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        await db.collection('configuracion').doc('terminos').set({ texto, fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp() });
         alert('✅ Términos actualizados');
-    } catch (error) {
-        console.error('Error:', error);
-        alert('❌ Error al guardar');
-    }
+    } catch (error) { console.error('Error:', error); alert('❌ Error'); }
 });
