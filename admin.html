@@ -82,15 +82,37 @@
                             <textarea id="descripcion" placeholder="Describe el producto..." rows="4"></textarea>
                         </div>
                         
+                        <!-- NUEVA SECCIÓN DE FOTOS CON SUBIDA OPTIMIZADA -->
                         <div class="form-group">
-                            <label>📸 URLs de las fotos *</label>
+                            <label>📸 Fotos del producto *</label>
+                            
+                            <!-- URLs manuales -->
                             <div id="contenedorUrls">
                                 <div class="url-entry">
-                                    <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto1.jpg" required>
+                                    <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg">
                                     <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
                                 </div>
                             </div>
-                            <button type="button" id="btnAgregarUrl" class="btn-agregar">+ Agregar otra foto</button>
+                            
+                            <!-- Botones -->
+                            <div class="botones-fotos">
+                                <button type="button" id="btnAgregarUrl" class="btn-agregar">+ Agregar URL manual</button>
+                                <button type="button" id="btnSubirImagen" class="btn-subir-imagen">📤 Subir imagen desde PC (optimizada)</button>
+                            </div>
+                            
+                            <!-- Input oculto para seleccionar archivos -->
+                            <input type="file" id="inputFileOculto" accept="image/*" multiple style="display:none;">
+                            
+                            <!-- Progreso de subida -->
+                            <div id="progresoSubida" class="progreso-subida" style="display:none;">
+                                <div class="progreso-header">
+                                    <span class="progreso-texto" id="textoProgreso">Subiendo imágenes...</span>
+                                    <span class="progreso-porcentaje" id="porcentajeSubida">0%</span>
+                                </div>
+                                <div class="barra-progreso">
+                                    <div class="progreso-relleno" id="rellenoProgreso"></div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="form-botones">
@@ -148,8 +170,12 @@
         </div>
     </div>
 
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+    
+    <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/admin.js"></script>
 </body>
