@@ -15,7 +15,6 @@
     --transicion: all 0.3s ease;
 }
 
-/* TEMA CLARO */
 [data-theme="light"] {
     --bg-principal: #f0f2f5;
     --bg-secundario: #ffffff;
@@ -30,7 +29,6 @@
     --bg-hover: #fafafa;
 }
 
-/* TEMA OSCURO */
 [data-theme="dark"] {
     --bg-principal: #0f0f1a;
     --bg-secundario: #1a1a2e;
@@ -186,7 +184,7 @@ main {
 }
 
 /* ============================================= */
-/* TARJETA DE PRODUCTO - IMÁGENES ADAPTABLES      */
+/* TARJETA DE PRODUCTO                            */
 /* ============================================= */
 .producto-card {
     background: var(--bg-secundario);
@@ -565,14 +563,12 @@ footer h4 {
     display: block;
 }
 
-/* Grid admin */
 .admin-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
 }
 
-/* Formularios */
 .form-container,
 .lista-container {
     background: var(--bg-secundario);
@@ -629,7 +625,6 @@ footer h4 {
     gap: 16px;
 }
 
-/* Checkboxes */
 .checkboxes-container {
     max-height: 200px;
     overflow-y: auto;
@@ -658,30 +653,17 @@ footer h4 {
     font-size: 0.95em;
 }
 
-.cargando-categorias,
-.info-text {
-    color: var(--texto-secundario);
-    font-size: 0.9em;
-}
-
 /* ============================================= */
-/* CAMPOS DE URL + SUBIDA DE FOTOS               */
+/* CAMPOS DE URL + BOTÓN DE SUBIDA               */
 /* ============================================= */
 .url-entry {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     margin-bottom: 10px;
     align-items: center;
 }
 
-.url-input-group {
-    display: flex;
-    flex: 1;
-    gap: 6px;
-    align-items: center;
-}
-
-.url-input-group input {
+.url-entry input[type="url"] {
     flex: 1;
     padding: 10px 14px;
     border: 2px solid var(--borde-input);
@@ -692,35 +674,31 @@ footer h4 {
     transition: var(--transicion);
 }
 
-.url-input-group input:focus {
+.url-entry input[type="url"]:focus {
     outline: none;
     border-color: var(--color-secundario);
-    box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
 }
 
 .btn-subir-foto {
     background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
     border: none;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     border-radius: 10px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 20px;
     transition: var(--transicion);
-    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .btn-subir-foto:hover {
-    transform: scale(1.05);
+    transform: scale(1.08);
     box-shadow: 0 4px 12px rgba(52,152,219,0.4);
-}
-
-.btn-subir-foto:active {
-    transform: scale(0.95);
+    background: linear-gradient(135deg, #2980b9, #1a6fa0);
 }
 
 .btn-eliminar-url {
@@ -729,19 +707,18 @@ footer h4 {
     border: none;
     width: 36px;
     height: 36px;
+    min-width: 36px;
     border-radius: 50%;
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
     transition: var(--transicion);
-    flex-shrink: 0;
 }
 
 .btn-eliminar-url:hover {
     background: #c0392b;
 }
 
-/* Botones de fotos */
 .botones-fotos {
     display: flex;
     gap: 10px;
@@ -765,7 +742,6 @@ footer h4 {
     background: rgba(233,69,96,0.1);
 }
 
-/* Estado de subida */
 .estado-subida {
     margin-top: 10px;
     padding: 10px 14px;
@@ -774,15 +750,8 @@ footer h4 {
     border: 1px solid var(--borde);
     font-size: 0.9em;
     color: var(--texto-secundario);
-    animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Botones del formulario */
 .form-botones {
     display: flex;
     gap: 10px;
@@ -822,7 +791,6 @@ footer h4 {
     background: var(--borde);
 }
 
-/* Barra de búsqueda admin */
 .barra-busqueda-admin {
     margin-bottom: 20px;
 }
@@ -844,7 +812,6 @@ footer h4 {
     box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
 }
 
-/* Lista de productos admin */
 #listaProductosAdmin,
 #listaCategoriasAdmin {
     max-height: 600px;
@@ -944,17 +911,9 @@ footer h4 {
     transition: var(--transicion);
 }
 
-.btn-toggle:hover {
-    background: rgba(241,196,15,0.2);
-}
-
-.btn-editar:hover {
-    background: rgba(52,152,219,0.15);
-}
-
-.btn-eliminar:hover {
-    background: rgba(231,76,60,0.15);
-}
+.btn-toggle:hover { background: rgba(241,196,15,0.2); }
+.btn-editar:hover { background: rgba(52,152,219,0.15); }
+.btn-eliminar:hover { background: rgba(231,76,60,0.15); }
 
 .vacio {
     text-align: center;
@@ -987,33 +946,14 @@ footer h4 {
     position: relative;
 }
 
-.pdf-header-content h1 {
-    font-size: 2em;
-    letter-spacing: 2px;
-    margin-bottom: 4px;
-}
-
-.pdf-header-content h2 {
-    color: var(--color-secundario);
-    font-size: 1.5em;
-    margin-bottom: 10px;
-}
-
-.fecha-actualizacion,
-.contacto-header {
-    font-size: 0.9em;
-    opacity: 0.9;
-}
-
-.contacto-header a {
-    color: var(--color-whatsapp);
-    text-decoration: none;
-}
+.pdf-header-content h1 { font-size: 2em; letter-spacing: 2px; margin-bottom: 4px; }
+.pdf-header-content h2 { color: var(--color-secundario); font-size: 1.5em; margin-bottom: 10px; }
+.fecha-actualizacion, .contacto-header { font-size: 0.9em; opacity: 0.9; }
+.contacto-header a { color: var(--color-whatsapp); text-decoration: none; }
 
 .btn-imprimir {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 20px; right: 20px;
     background: rgba(255,255,255,0.2);
     color: white;
     border: 1px solid rgba(255,255,255,0.3);
@@ -1023,117 +963,36 @@ footer h4 {
     font-size: 14px;
     transition: var(--transicion);
 }
+.btn-imprimir:hover { background: rgba(255,255,255,0.3); }
 
-.btn-imprimir:hover {
-    background: rgba(255,255,255,0.3);
-}
-
-#catalogoPdf {
-    padding: 40px 30px;
-}
-
-.categoria-seccion {
-    margin-bottom: 40px;
-}
-
-.categoria-titulo {
-    font-size: 1.4em;
-    color: #1a1a2e;
-    border-bottom: 3px solid var(--color-secundario);
-    padding-bottom: 8px;
-    margin-bottom: 20px;
-}
-
-.productos-grid-pdf {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 24px;
-}
-
-.producto-pdf-item {
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    overflow: hidden;
-    page-break-inside: avoid;
-}
-
-.pdf-img-container {
-    width: 100%;
-    height: 200px;
-    overflow: hidden;
-    background: #f5f5f5;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.pdf-img-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.pdf-info {
-    padding: 16px;
-}
-
-.pdf-info h3 {
-    font-size: 1.1em;
-    color: #333;
-    margin-bottom: 4px;
-}
-
-.pdf-info .precio {
-    font-size: 1.3em;
-}
-
-.descripcion-pdf {
-    font-size: 0.88em;
-    color: #666;
-    line-height: 1.5;
-}
-
-.fotos-adicionales {
-    font-size: 0.8em;
-    color: #999;
-    margin-top: 8px;
-}
-
-.pdf-footer {
-    background: #f8f9fa;
-    padding: 24px 30px;
-    border-top: 1px solid #e0e0e0;
-}
-
-.footer-contacto {
-    text-align: center;
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.9em;
-}
-
-.derechos {
-    font-size: 0.82em;
-    color: #999;
-}
+#catalogoPdf { padding: 40px 30px; }
+.categoria-seccion { margin-bottom: 40px; }
+.categoria-titulo { font-size: 1.4em; color: #1a1a2e; border-bottom: 3px solid var(--color-secundario); padding-bottom: 8px; margin-bottom: 20px; }
+.productos-grid-pdf { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
+.producto-pdf-item { border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; page-break-inside: avoid; }
+.pdf-img-container { width: 100%; height: 200px; overflow: hidden; background: #f5f5f5; display: flex; align-items: center; justify-content: center; }
+.pdf-img-container img { width: 100%; height: 100%; object-fit: contain; }
+.pdf-info { padding: 16px; }
+.pdf-info h3 { font-size: 1.1em; color: #333; margin-bottom: 4px; }
+.pdf-info .precio { font-size: 1.3em; }
+.descripcion-pdf { font-size: 0.88em; color: #666; line-height: 1.5; }
+.fotos-adicionales { font-size: 0.8em; color: #999; margin-top: 8px; }
+.pdf-footer { background: #f8f9fa; padding: 24px 30px; border-top: 1px solid #e0e0e0; }
+.footer-contacto { text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e0e0e0; font-size: 0.9em; }
+.derechos { font-size: 0.82em; color: #999; }
 
 /* ============================================= */
 /* RESPONSIVE                                     */
 /* ============================================= */
 @media (max-width: 900px) {
-    .admin-grid {
-        grid-template-columns: 1fr;
-    }
+    .admin-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
     header { padding: 16px 12px; }
     .header-top h1 { font-size: 1.5em; }
     .barra-superior { flex-direction: column; }
-    .barra-superior input,
-    .barra-superior select,
-    .btn-pdf { width: 100%; }
+    .barra-superior input, .barra-superior select, .btn-pdf { width: 100%; }
     main { grid-template-columns: 1fr; margin: 20px auto; padding: 0 12px; gap: 16px; }
     .foto-principal { max-height: 280px; }
     .form-row { grid-template-columns: 1fr; }
@@ -1146,9 +1005,6 @@ footer h4 {
     .productos-grid-pdf { grid-template-columns: 1fr; }
 }
 
-/* ============================================= */
-/* IMPRESIÓN                                      */
-/* ============================================= */
 @media print {
     .no-print { display: none !important; }
     .pdf-body { background: white; padding: 0; }
