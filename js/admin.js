@@ -23,7 +23,6 @@ const checkboxesCategorias = document.getElementById('checkboxesCategorias');
 const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
 const buscadorAdmin = document.getElementById('buscadorAdmin');
 
-const inputFileOculto = document.getElementById('inputFileOculto');
 const estadoSubida = document.getElementById('estadoSubida');
 const textoEstadoSubida = document.getElementById('textoEstadoSubida');
 
@@ -150,7 +149,7 @@ function crearCampoUrl(valor = '') {
     urlEntry.classList.add('url-entry');
     urlEntry.innerHTML = `
         <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg" value="${valor}">
-        <button type="button" class="btn-subir-foto" title="Subir foto desde PC">📤</button>
+        <button type="button" class="btn-subir-foto" title="Subir foto a Postimages">📤</button>
         <button type="button" class="btn-eliminar-url" title="Eliminar campo">✕</button>
     `;
     
@@ -161,7 +160,7 @@ function crearCampoUrl(valor = '') {
         e.preventDefault();
         e.stopPropagation();
         campoInputActivo = inputUrl;
-        inputFileOculto.click();
+        abrirPostimagesPopup();
     });
     
     const btnEliminar = urlEntry.querySelector('.btn-eliminar-url');
@@ -180,176 +179,109 @@ function crearCampoUrl(valor = '') {
 btnAgregarUrl.addEventListener('click', (e) => { e.preventDefault(); crearCampoUrl(''); });
 
 // =============================================
-// SUBIR IMAGEN A POSTIMAGES (CORREGIDO)
+// ABRIR POPUP DE POSTIMAGES
 // =============================================
-inputFileOculto.addEventListener('change', async function() {
-    const archivo = this.files[0];
-    if (!archivo) return;
+function abrirPostimagesPopup() {
+    // Crear overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'postimagesOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
     
-    console.log('📁 Archivo:', archivo.name, '- Tipo:', archivo.type, '- Tamaño:', (archivo.size / 1024).toFixed(2), 'KB');
+    // Crear contenedor del popup
+    const popup = document.createElement('div');
+    popup.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 80vh;
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    `;
     
-    if (!archivo.type.startsWith('image/')) {
-        alert('❌ Selecciona una imagen (JPG, PNG, GIF, WebP).');
-        this.value = '';
-        return;
-    }
+    popup.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+            <h3 style="margin:0;color:#333;">📤 Subir imagen a Postimages</h3>
+            <button id="btnCerrarPopup" style="background:#ff4757;color:white;border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;">✕</button>
+        </div>
+        <p style="margin-bottom:12px;color:#666;font-size:14px;">Sube la imagen. Cuando termine, copia el enlace "Direct link" y pégalo abajo.</p>
+        <div id="iframeContainer" style="width:100%;height:350px;border:2px dashed #ddd;border-radius:8px;overflow:hidden;background:#fafafa;">
+            <p style="text-align:center;padding-top:150px;color:#999;">Cargando Postimages...</p>
+        </div>
+        <input type="text" id="inputUrlPopup" placeholder="Pega aquí el Direct link de la imagen..." style="width:100%;padding:12px;margin-top:12px;border:2px solid #e0e0e0;border-radius:8px;font-size:14px;">
+        <button id="btnUsarUrl" style="width:100%;padding:12px;margin-top:8px;background:#27ae60;color:white;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">✅ Usar esta URL</button>
+    `;
     
-    if (archivo.size > 10 * 1024 * 1024) {
-        alert('❌ Imagen demasiado grande. Máximo 10MB.');
-        this.value = '';
-        return;
-    }
+    overlay.appendChild(popup);
+    document.body.appendChild(overlay);
     
-    estadoSubida.style.display = 'block';
-    textoEstadoSubida.textContent = '⏳ Subiendo imagen a Postimages...';
-    textoEstadoSubida.style.color = '';
+    // Cargar iframe de Postimages
+    setTimeout(() => {
+        const iframeContainer = document.getElementById('iframeContainer');
+        iframeContainer.innerHTML = `
+            <iframe src="https://postimages.org/plugins" 
+                    style="width:100%;height:350px;border:none;"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups">
+            </iframe>
+        `;
+    }, 500);
     
-    let urlImagen = '';
+    // Cerrar popup
+    document.getElementById('btnCerrarPopup').addEventListener('click', () => {
+        document.body.removeChild(overlay);
+    });
     
-    // =============================================
-    // MÉTODO 1: Usar el endpoint oficial con el campo correcto
-    // =============================================
-    try {
-        console.log('🔵 Método 1: POST a postimages.org/json/rr');
-        
-        const formData = new FormData();
-        // Postimages espera el campo 'file' o 'upload'
-        formData.append('file', archivo, archivo.name);
-        formData.append('upload', archivo, archivo.name);
-        formData.append('format', 'json');
-        formData.append('optsize', '0'); // Sin redimensionar
-        
-        const respuesta = await fetch('https://postimages.org/json/rr', {
-            method: 'POST',
-            body: formData
-        });
-        
-        console.log('  Status:', respuesta.status);
-        const data = await respuesta.json();
-        console.log('  Respuesta:', data);
-        
-        if (data && data.url) {
-            urlImagen = data.url;
-            console.log('  ✅ URL (directa):', urlImagen);
-        } else if (data && data.image && data.image.url) {
-            urlImagen = data.image.url;
-            console.log('  ✅ URL (image.url):', urlImagen);
-        } else if (data && data.image && data.image.link) {
-            urlImagen = data.image.link;
-            console.log('  ✅ URL (image.link):', urlImagen);
-        } else if (data && data.error) {
-            console.warn('  ⚠️ Error del servidor:', data.error);
+    // Cerrar al hacer clic fuera
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
         }
-        
-    } catch (error) {
-        console.warn('  ⚠️ Método 1 falló:', error.message);
-    }
+    });
     
-    // =============================================
-    // MÉTODO 2: Si falló, probar sin formato JSON
-    // =============================================
-    if (!urlImagen) {
-        try {
-            console.log('🔵 Método 2: POST a postimages.org/upload');
-            
-            const formData2 = new FormData();
-            formData2.append('file', archivo, archivo.name);
-            
-            const respuesta2 = await fetch('https://postimages.org/upload', {
-                method: 'POST',
-                body: formData2,
-                mode: 'no-cors' // Evitar error CORS
-            });
-            
-            console.log('  Status:', respuesta2.status, '(no-cors, no se puede leer respuesta)');
-            
-            // Con no-cors no podemos leer la respuesta, así que este método no nos sirve para obtener URL
-            console.warn('  ⚠️ Método 2 no puede obtener URL por restricciones CORS');
-            
-        } catch (error) {
-            console.warn('  ⚠️ Método 2 falló:', error.message);
-        }
-    }
-    
-    // =============================================
-    // MÉTODO 3: Usar ImgBB como respaldo
-    // =============================================
-    if (!urlImagen) {
-        try {
-            console.log('🟠 Método 3: Probando ImgBB...');
-            
-            // Convertir imagen a base64
-            const base64 = await fileToBase64(archivo);
-            
-            const formData3 = new FormData();
-            formData3.append('image', base64.split(',')[1]); // Solo la parte base64
-            
-            const respuesta3 = await fetch('https://api.imgbb.com/1/upload?key=4fbf1f4b2fb63db7ed4f4a8e2b2b5f90', {
-                method: 'POST',
-                body: formData3
-            });
-            
-            console.log('  Status:', respuesta3.status);
-            const data3 = await respuesta3.json();
-            console.log('  Respuesta:', data3);
-            
-            if (data3 && data3.success && data3.data && data3.data.url) {
-                urlImagen = data3.data.url;
-                console.log('  ✅ URL ImgBB:', urlImagen);
+    // Usar URL
+    document.getElementById('btnUsarUrl').addEventListener('click', () => {
+        const url = document.getElementById('inputUrlPopup').value.trim();
+        if (url && url.startsWith('http')) {
+            if (campoInputActivo) {
+                campoInputActivo.value = url;
+            } else {
+                const campos = document.querySelectorAll('.url-foto');
+                let asignado = false;
+                campos.forEach(campo => {
+                    if (campo.value.trim() === '' && !asignado) {
+                        campo.value = url;
+                        asignado = true;
+                    }
+                });
+                if (!asignado) crearCampoUrl(url);
             }
-            
-        } catch (error) {
-            console.warn('  ⚠️ ImgBB falló:', error.message);
-        }
-    }
-    
-    // =============================================
-    // RESULTADO
-    // =============================================
-    if (urlImagen) {
-        console.log('✅ ÉXITO - URL:', urlImagen);
-        
-        if (campoInputActivo) {
-            campoInputActivo.value = urlImagen;
+            document.body.removeChild(overlay);
+            mostrarMensajeExito();
         } else {
-            const campos = document.querySelectorAll('.url-foto');
-            let asignado = false;
-            campos.forEach(campo => {
-                if (campo.value.trim() === '' && !asignado) {
-                    campo.value = urlImagen;
-                    asignado = true;
-                }
-            });
-            if (!asignado) crearCampoUrl(urlImagen);
+            alert('Por favor pega una URL válida (debe empezar con http)');
         }
-        
-        textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
-        textoEstadoSubida.style.color = '#27ae60';
-    } else {
-        console.error('❌ Todos los métodos fallaron');
-        textoEstadoSubida.textContent = '❌ Error al subir. Revisa F12 > Console.';
-        textoEstadoSubida.style.color = '#e74c3c';
-    }
-    
+    });
+}
+
+function mostrarMensajeExito() {
+    estadoSubida.style.display = 'block';
+    textoEstadoSubida.textContent = '✅ ¡URL pegada en el campo!';
+    textoEstadoSubida.style.color = '#27ae60';
     setTimeout(() => {
         estadoSubida.style.display = 'none';
         textoEstadoSubida.style.color = '';
-    }, 4000);
-    
-    this.value = '';
-    campoInputActivo = null;
-});
-
-// =============================================
-// FUNCIÓN AUXILIAR: Convertir archivo a base64
-// =============================================
-function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-    });
+    }, 3000);
 }
 
 // =============================================
