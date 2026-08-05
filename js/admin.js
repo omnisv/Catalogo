@@ -26,12 +26,9 @@ const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
 const buscadorAdmin = document.getElementById('buscadorAdmin');
 
 // Subida de imágenes
-const btnSubirImagen = document.getElementById('btnSubirImagen');
 const inputFileOculto = document.getElementById('inputFileOculto');
-const progresoSubida = document.getElementById('progresoSubida');
-const porcentajeSubida = document.getElementById('porcentajeSubida');
-const textoProgreso = document.getElementById('textoProgreso');
-const rellenoProgreso = document.getElementById('rellenoProgreso');
+const estadoSubida = document.getElementById('estadoSubida');
+const textoEstadoSubida = document.getElementById('textoEstadoSubida');
 
 // Categorías
 const formCategoria = document.getElementById('formCategoria');
@@ -47,6 +44,7 @@ const btnGuardarTerminos = document.getElementById('btnGuardarTerminos');
 const terminosTexto = document.getElementById('terminosTexto');
 
 let todosLosProductosAdmin = [];
+let campoUrlActivo = null; // Para saber qué campo de URL está activo al subir
 
 // =============================================
 // TEMA OSCURO/CLARO
@@ -177,223 +175,154 @@ function filtrarProductosAdmin(texto) {
 }
 
 // =============================================
-// GESTIÓN DE URLs MANUALES
+// CREAR NUEVO CAMPO DE URL
 // =============================================
-btnAgregarUrl.addEventListener('click', () => {
-    agregarCampoUrl('');
-});
-
-function agregarCampoUrl(valor = '') {
-    const nuevaEntrada = document.createElement('div');
-    nuevaEntrada.classList.add('url-entry');
-    nuevaEntrada.innerHTML = `
-        <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg" value="${valor}">
+function crearCampoUrl(valor = '') {
+    const urlEntry = document.createElement('div');
+    urlEntry.classList.add('url-entry');
+    urlEntry.innerHTML = `
+        <div class="url-input-group">
+            <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg" value="${valor}">
+            <button type="button" class="btn-subir-foto" title="Subir foto desde PC">📤</button>
+        </div>
         <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
     `;
-    contenedorUrls.appendChild(nuevaEntrada);
     
-    nuevaEntrada.querySelector('.btn-eliminar-url').addEventListener('click', () => {
+    // Evento para el botón de subir foto
+    const btnSubir = urlEntry.querySelector('.btn-subir-foto');
+    btnSubir.addEventListener('click', () => {
+        campoUrlActivo = urlEntry.querySelector('.url-foto');
+        inputFileOculto.click();
+    });
+    
+    // Evento para eliminar
+    const btnEliminar = urlEntry.querySelector('.btn-eliminar-url');
+    btnEliminar.addEventListener('click', () => {
         if (document.querySelectorAll('.url-entry').length > 1) {
-            contenedorUrls.removeChild(nuevaEntrada);
+            contenedorUrls.removeChild(urlEntry);
         } else {
-            alert('Debe mantener al menos una URL de foto');
+            alert('Debe mantener al menos un campo de foto');
         }
     });
-}
-
-// Evento para el botón eliminar inicial
-document.querySelector('.btn-eliminar-url')?.addEventListener('click', function() {
-    if (document.querySelectorAll('.url-entry').length > 1) {
-        this.parentElement.remove();
-    } else {
-        alert('Debe mantener al menos una URL de foto');
-    }
-});
-
-// =============================================
-// OPTIMIZAR IMAGEN ANTES DE SUBIR
-// =============================================
-function optimizarImagen(archivo, maxAncho = 1200, calidad = 0.8) {
-    return new Promise((resolve, reject) => {
-        if (!archivo.type.startsWith('image/')) {
-            resolve(archivo);
-            return;
-        }
-        
-        const lector = new FileReader();
-        lector.readAsDataURL(archivo);
-        
-        lector.onload = (e) => {
-            const img = new Image();
-            img.src = e.target.result;
-            
-            img.onload = () => {
-                let ancho = img.width;
-                let alto = img.height;
-                
-                // Redimensionar solo si es más grande que maxAncho
-                if (ancho > maxAncho) {
-                    alto = Math.round((alto * maxAncho) / ancho);
-                    ancho = maxAncho;
-                }
-                
-                const canvas = document.createElement('canvas');
-                canvas.width = ancho;
-                canvas.height = alto;
-                
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, ancho, alto);
-                
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const archivoOptimizado = new File(
-                            [blob],
-                            archivo.name.replace(/\.[^/.]+$/, '.jpg'),
-                            { type: 'image/jpeg' }
-                        );
-                        
-                        const tamañoOriginal = (archivo.size / 1024).toFixed(0);
-                        const tamañoOptimizado = (archivoOptimizado.size / 1024).toFixed(0);
-                        console.log(`📸 Optimizado: ${tamañoOriginal}KB → ${tamañoOptimizado}KB`);
-                        
-                        resolve(archivoOptimizado);
-                    } else {
-                        resolve(archivo);
-                    }
-                }, 'image/jpeg', calidad);
-            };
-            
-            img.onerror = () => resolve(archivo);
-        };
-        
-        lector.onerror = () => resolve(archivo);
-    });
-}
-
-// =============================================
-// SUBIR IMAGEN A FIREBASE STORAGE
-// =============================================
-async function subirAFirebaseStorage(archivo) {
-    const nombreArchivo = `productos/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.jpg`;
-    const storageRef = storage.ref(nombreArchivo);
     
-    try {
-        const snapshot = await storageRef.put(archivo);
-        const url = await snapshot.ref.getDownloadURL();
-        console.log('✅ Imagen subida:', url);
-        return url;
-    } catch (error) {
-        console.error('Error al subir a Storage:', error);
-        throw error;
-    }
+    return urlEntry;
 }
 
-// =============================================
-// EVENTO: SELECCIONAR Y SUBIR IMÁGENES
-// =============================================
-btnSubirImagen.addEventListener('click', () => {
-    inputFileOculto.click();
+// Inicializar el primer campo
+document.addEventListener('DOMContentLoaded', () => {
+    // Configurar el primer campo existente
+    const primerEntry = document.querySelector('.url-entry');
+    if (primerEntry) {
+        const btnSubir = primerEntry.querySelector('.btn-subir-foto');
+        if (btnSubir) {
+            btnSubir.addEventListener('click', () => {
+                campoUrlActivo = primerEntry.querySelector('.url-foto');
+                inputFileOculto.click();
+            });
+        }
+    }
 });
 
+// Botón para agregar más campos
+btnAgregarUrl.addEventListener('click', () => {
+    contenedorUrls.appendChild(crearCampoUrl(''));
+});
+
+// =============================================
+// SUBIDA DE IMÁGENES CON POSTIMAGES
+// =============================================
 inputFileOculto.addEventListener('change', async (e) => {
-    const archivos = Array.from(e.target.files);
+    const archivo = e.target.files[0];
     
-    if (archivos.length === 0) return;
+    if (!archivo) return;
     
-    // Validar máximo 10 archivos
-    if (archivos.length > 10) {
-        alert('Máximo 10 imágenes por carga.');
+    // Validar tipo
+    if (!archivo.type.startsWith('image/')) {
+        alert('Por favor selecciona una imagen válida (JPG, PNG, GIF, WebP).');
         inputFileOculto.value = '';
         return;
     }
     
-    // Mostrar progreso
-    progresoSubida.style.display = 'block';
-    btnSubirImagen.disabled = true;
-    textoProgreso.textContent = 'Optimizando y subiendo imágenes...';
-    
-    let subidasExitosas = 0;
-    const urlsSubidas = [];
-    
-    for (let i = 0; i < archivos.length; i++) {
-        const archivoOriginal = archivos[i];
-        
-        // Validar tipo
-        if (!archivoOriginal.type.startsWith('image/')) {
-            alert(`"${archivoOriginal.name}" no es una imagen válida.`);
-            continue;
-        }
-        
-        // Validar tamaño máximo (10MB)
-        if (archivoOriginal.size > 10 * 1024 * 1024) {
-            alert(`"${archivoOriginal.name}" es demasiado grande. Máximo 10MB.`);
-            continue;
-        }
-        
-        try {
-            // Actualizar progreso
-            const progresoActual = Math.round(((i) / archivos.length) * 100);
-            porcentajeSubida.textContent = `${progresoActual}%`;
-            rellenoProgreso.style.width = `${progresoActual}%`;
-            textoProgreso.textContent = `Optimizando imagen ${i + 1} de ${archivos.length}...`;
-            
-            // 1. Optimizar imagen
-            const archivoOptimizado = await optimizarImagen(archivoOriginal);
-            
-            // Actualizar progreso
-            textoProgreso.textContent = `Subiendo imagen ${i + 1} de ${archivos.length}...`;
-            
-            // 2. Subir a Firebase Storage
-            const url = await subirAFirebaseStorage(archivoOptimizado);
-            
-            urlsSubidas.push(url);
-            subidasExitosas++;
-            
-            // Actualizar progreso final
-            const progresoFinal = Math.round(((i + 1) / archivos.length) * 100);
-            porcentajeSubida.textContent = `${progresoFinal}%`;
-            rellenoProgreso.style.width = `${progresoFinal}%`;
-            
-        } catch (error) {
-            console.error(`Error con ${archivoOriginal.name}:`, error);
-            alert(`Error al subir "${archivoOriginal.name}". Intenta de nuevo.`);
-        }
+    // Validar tamaño (máximo 10MB)
+    if (archivo.size > 10 * 1024 * 1024) {
+        alert('La imagen es demasiado grande. Máximo 10MB.');
+        inputFileOculto.value = '';
+        return;
     }
     
-    // Agregar URLs a los campos
-    urlsSubidas.forEach(url => {
-        agregarUrlAFotos(url);
-    });
+    // Mostrar estado de subida
+    estadoSubida.style.display = 'block';
+    textoEstadoSubida.textContent = '⏳ Subiendo imagen a Postimages...';
     
-    // Finalizar
-    textoProgreso.textContent = `✅ ${subidasExitosas} de ${archivos.length} imágenes subidas`;
+    try {
+        // Usar la API de Postimages
+        const urlImagen = await subirAPostimages(archivo);
+        
+        // Asignar URL al campo activo
+        if (campoUrlActivo) {
+            campoUrlActivo.value = urlImagen;
+            textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
+        } else {
+            // Si no hay campo activo, buscar el primer campo vacío
+            const campos = document.querySelectorAll('.url-foto');
+            let asignado = false;
+            campos.forEach(campo => {
+                if (campo.value.trim() === '' && !asignado) {
+                    campo.value = urlImagen;
+                    asignado = true;
+                }
+            });
+            
+            if (!asignado) {
+                // Si todos están llenos, crear nuevo campo
+                const nuevoEntry = crearCampoUrl(urlImagen);
+                contenedorUrls.appendChild(nuevoEntry);
+            }
+            
+            textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
+        }
+        
+    } catch (error) {
+        console.error('Error al subir:', error);
+        textoEstadoSubida.textContent = '❌ Error al subir la imagen. Intenta de nuevo.';
+    }
     
+    // Ocultar estado después de 2 segundos
     setTimeout(() => {
-        progresoSubida.style.display = 'none';
-        rellenoProgreso.style.width = '0%';
-        btnSubirImagen.disabled = false;
-        inputFileOculto.value = '';
+        estadoSubida.style.display = 'none';
     }, 2000);
+    
+    // Limpiar input file
+    inputFileOculto.value = '';
+    campoUrlActivo = null;
 });
 
 // =============================================
-// AGREGAR URL A LOS CAMPOS DE FOTOS
+// FUNCIÓN PARA SUBIR A POSTIMAGES
 // =============================================
-function agregarUrlAFotos(url) {
-    const inputsUrl = document.querySelectorAll('.url-foto');
+async function subirAPostimages(archivo) {
+    const formData = new FormData();
+    formData.append('upload', archivo);
+    formData.append('format', 'json');
     
-    // Buscar el primer campo vacío
-    let campoVacio = null;
-    inputsUrl.forEach(input => {
-        if (input.value.trim() === '' && !campoVacio) {
-            campoVacio = input;
-        }
+    const respuesta = await fetch('https://postimages.org/json/rr', {
+        method: 'POST',
+        body: formData
     });
     
-    if (campoVacio) {
-        campoVacio.value = url;
+    if (!respuesta.ok) {
+        throw new Error('Error en la subida');
+    }
+    
+    const data = await respuesta.json();
+    
+    // Postimages devuelve varias URLs en data.image
+    if (data && data.image && data.image.url) {
+        return data.image.url; // URL directa
+    } else if (data && data.url) {
+        return data.url;
     } else {
-        agregarCampoUrl(url);
+        throw new Error('No se pudo obtener la URL de la imagen');
     }
 }
 
@@ -445,6 +374,7 @@ formProducto.addEventListener('submit', async (e) => {
         return;
     }
     
+    // Recolectar URLs de fotos (solo strings)
     const inputsUrl = document.querySelectorAll('.url-foto');
     const fotos = [];
     inputsUrl.forEach(input => {
@@ -498,12 +428,11 @@ function resetearFormularioProducto() {
     productoId.value = '';
     tituloFormProducto.textContent = 'Agregar Producto';
     btnCancelarEdicion.style.display = 'none';
-    contenedorUrls.innerHTML = `
-        <div class="url-entry">
-            <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg">
-            <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
-        </div>
-    `;
+    
+    // Resetear a un solo campo de URL
+    contenedorUrls.innerHTML = '';
+    contenedorUrls.appendChild(crearCampoUrl(''));
+    
     document.querySelectorAll('.checkbox-categoria').forEach(cb => cb.checked = false);
 }
 
@@ -635,13 +564,14 @@ async function editarProducto(id) {
         document.getElementById('precio').value = producto.precio;
         document.getElementById('descripcion').value = producto.descripcion || '';
         
+        // Reconstruir campos de URL
         contenedorUrls.innerHTML = '';
         if (producto.fotos && producto.fotos.length > 0) {
-            producto.fotos.forEach((url) => {
-                agregarCampoUrl(url);
+            producto.fotos.forEach(url => {
+                contenedorUrls.appendChild(crearCampoUrl(url));
             });
         } else {
-            agregarCampoUrl('');
+            contenedorUrls.appendChild(crearCampoUrl(''));
         }
         
         await cargarCategoriasEnCheckboxes();
@@ -666,7 +596,7 @@ async function editarProducto(id) {
 // ELIMINAR PRODUCTO
 // =============================================
 async function eliminarProducto(id) {
-    if (confirm('¿Estás seguro de ELIMINAR PERMANENTEMENTE este producto? Esta acción no se puede deshacer.')) {
+    if (confirm('¿Estás seguro de ELIMINAR PERMANENTEMENTE este producto?')) {
         try {
             await db.collection('productos').doc(id).delete();
             alert('✅ Producto eliminado');
