@@ -6,6 +6,8 @@ const ADMIN_USER = "omnisv";
 const ADMIN_PASS = "omniSV_26";
 
 let todosLosProductosAdmin = [];
+let categoriasDisponibles = [];
+let categoriasSeleccionadas = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     
@@ -23,7 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const contenedorUrls = document.getElementById('contenedorUrls');
     const btnAgregarUrl = document.getElementById('btnAgregarUrl');
     const listaProductosAdmin = document.getElementById('listaProductosAdmin');
-    const checkboxesCategorias = document.getElementById('checkboxesCategorias');
     const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
     const buscadorAdmin = document.getElementById('buscadorAdmin');
 
@@ -40,6 +41,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const btnGuardarTerminos = document.getElementById('btnGuardarTerminos');
     const terminosTexto = document.getElementById('terminosTexto');
+
+    // Multiselect
+    const multiselectHeader = document.getElementById('multiselectHeader');
+    const multiselectDropdown = document.getElementById('multiselectDropdown');
+    const multiselectSearch = document.getElementById('multiselectSearch');
+    const multiselectOptions = document.getElementById('multiselectOptions');
 
     // =============================================
     // TEMA
@@ -92,6 +99,95 @@ document.addEventListener('DOMContentLoaded', function() {
     crearCampoUrl('');
 
     // =============================================
+    // MULTISELECT DE CATEGORÍAS
+    // =============================================
+    multiselectHeader.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isOpen = multiselectDropdown.style.display === 'block';
+        multiselectDropdown.style.display = isOpen ? 'none' : 'block';
+        if (!isOpen) {
+            multiselectSearch.focus();
+            renderizarOpcionesCategorias();
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.multiselect-container')) {
+            multiselectDropdown.style.display = 'none';
+        }
+    });
+
+    multiselectSearch.addEventListener('input', function() {
+        renderizarOpcionesCategorias(this.value.toLowerCase());
+    });
+
+    multiselectSearch.addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
+
+    function renderizarOpcionesCategorias(filtro = '') {
+        multiselectOptions.innerHTML = '';
+        
+        const categoriasFiltradas = categoriasDisponibles.filter(function(cat) {
+            return cat.nombre.toLowerCase().includes(filtro);
+        });
+        
+        if (categoriasFiltradas.length === 0) {
+            multiselectOptions.innerHTML = '<p class="info-text">No se encontraron categorías.</p>';
+            return;
+        }
+        
+        categoriasFiltradas.forEach(function(cat) {
+            const checked = categoriasSeleccionadas.includes(cat.id);
+            const div = document.createElement('div');
+            div.classList.add('multiselect-option');
+            div.innerHTML = `
+                <input type="checkbox" id="ms_cat_${cat.id}" value="${cat.id}" ${checked ? 'checked' : ''}>
+                <label for="ms_cat_${cat.id}">${cat.nombre}</label>
+            `;
+            
+            const checkbox = div.querySelector('input');
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    if (!categoriasSeleccionadas.includes(cat.id)) {
+                        categoriasSeleccionadas.push(cat.id);
+                    }
+                } else {
+                    categoriasSeleccionadas = categoriasSeleccionadas.filter(function(id) { return id !== cat.id; });
+                }
+                actualizarHeaderMultiselect();
+            });
+            
+            multiselectOptions.appendChild(div);
+        });
+    }
+
+    function actualizarHeaderMultiselect() {
+        const placeholder = multiselectHeader.querySelector('.multiselect-placeholder');
+        if (categoriasSeleccionadas.length === 0) {
+            placeholder.textContent = 'Seleccionar categorías...';
+        } else {
+            const nombres = categoriasSeleccionadas.map(function(id) {
+                const cat = categoriasDisponibles.find(function(c) { return c.id === id; });
+                return cat ? cat.nombre : id;
+            });
+            placeholder.textContent = nombres.join(', ');
+        }
+    }
+
+    function cargarCategoriasEnMultiselect() {
+        db.collection('categorias').orderBy('nombre').get().then(function(snapshot) {
+            categoriasDisponibles = [];
+            snapshot.forEach(function(doc) {
+                categoriasDisponibles.push({ id: doc.id, nombre: doc.data().nombre });
+            });
+            renderizarOpcionesCategorias();
+        }).catch(function(error) {
+            console.error('Error:', error);
+        });
+    }
+
+    // =============================================
     // LOGIN
     // =============================================
     formLogin.addEventListener('submit', function(e) {
@@ -117,7 +213,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Auto-login
     if (credencialesGuardadas) {
         const { usuario, password } = JSON.parse(credencialesGuardadas);
         if (usuario === ADMIN_USER && password === ADMIN_PASS) {
@@ -128,11 +223,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function cargarTodo() {
-        cargarCategoriasEnCheckboxes();
+        cargarCategoriasEnMultiselect();
         cargarProductosAdmin();
         cargarCategoriasAdmin();
         cargarTerminosAdmin();
-        inicializarFreeimageUpload();
+        inicializarImgurUpload();
     }
 
     btnCerrarSesion.addEventListener('click', function() {
@@ -183,23 +278,19 @@ document.addEventListener('DOMContentLoaded', function() {
         btnCancelarEdicion.style.display = 'none';
         contenedorUrls.innerHTML = '';
         crearCampoUrl('');
-        document.querySelectorAll('.checkbox-categoria').forEach(function(cb) { cb.checked = false; });
+        categoriasSeleccionadas = [];
+        actualizarHeaderMultiselect();
     });
 
-    
-       // =============================================
-    // IMGUR UPLOAD (ANÓNIMO, SIN API KEY)
     // =============================================
-    function inicializarFreeimageUpload() {
+    // IMGUR UPLOAD
+    // =============================================
+    function inicializarImgurUpload() {
         const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('freeimageInput');
+        const fileInput = document.getElementById('imgurInput');
         const btnSeleccionar = document.getElementById('btnSeleccionarImagen');
         
         if (!dropArea || !fileInput || !btnSeleccionar) return;
-        
-        // Actualizar el texto para decir Imgur
-        const smallText = dropArea.querySelector('small');
-        if (smallText) smallText.textContent = 'JPG, PNG, GIF, WebP • Máx 10MB c/u • Imgur';
         
         btnSeleccionar.addEventListener('click', function(e) {
             e.preventDefault();
@@ -219,9 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
         dropArea.addEventListener('drop', function(e) {
             e.preventDefault();
             dropArea.classList.remove('drag-over');
-            if (e.dataTransfer.files.length > 0) {
-                manejarArchivos(e.dataTransfer.files);
-            }
+            if (e.dataTransfer.files.length > 0) manejarArchivos(e.dataTransfer.files);
         });
         
         fileInput.addEventListener('change', function() {
@@ -235,18 +324,11 @@ document.addEventListener('DOMContentLoaded', function() {
     async function manejarArchivos(archivos) {
         for (let i = 0; i < archivos.length; i++) {
             const archivo = archivos[i];
-            
-            if (!archivo.type.startsWith('image/')) {
-                alert('"' + archivo.name + '" no es una imagen.');
-                continue;
-            }
-            if (archivo.size > 10 * 1024 * 1024) {
-                alert('"' + archivo.name + '" es muy grande (máx 10MB).');
-                continue;
-            }
+            if (!archivo.type.startsWith('image/')) { alert('"' + archivo.name + '" no es una imagen.'); continue; }
+            if (archivo.size > 10 * 1024 * 1024) { alert('"' + archivo.name + '" es muy grande (máx 10MB).'); continue; }
             
             estadoSubida.style.display = 'block';
-            textoEstadoSubida.textContent = '⏳ Subiendo a Imgur: ' + archivo.name + '...';
+            textoEstadoSubida.textContent = '⏳ Subiendo: ' + archivo.name + '...';
             textoEstadoSubida.style.color = '';
             
             try {
@@ -255,75 +337,45 @@ document.addEventListener('DOMContentLoaded', function() {
                     const campos = document.querySelectorAll('.url-foto');
                     let asignado = false;
                     campos.forEach(function(campo) {
-                        if (campo.value.trim() === '' && !asignado) {
-                            campo.value = url;
-                            asignado = true;
-                        }
+                        if (campo.value.trim() === '' && !asignado) { campo.value = url; asignado = true; }
                     });
                     if (!asignado) crearCampoUrl(url);
-                    
                     textoEstadoSubida.textContent = '✅ ¡Subido! ' + archivo.name;
                     textoEstadoSubida.style.color = '#27ae60';
-                    console.log('✅ URL:', url);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                textoEstadoSubida.textContent = '❌ Error: ' + archivo.name + ' - ' + error.message;
+                textoEstadoSubida.textContent = '❌ Error: ' + archivo.name;
                 textoEstadoSubida.style.color = '#e74c3c';
             }
         }
-        
-        setTimeout(function() {
-            estadoSubida.style.display = 'none';
-            textoEstadoSubida.style.color = '';
-        }, 5000);
+        setTimeout(function() { estadoSubida.style.display = 'none'; textoEstadoSubida.style.color = ''; }, 4000);
     }
 
     function subirAImgur(archivo) {
         return new Promise(function(resolve, reject) {
-            // Convertir a base64
             const reader = new FileReader();
             reader.onload = function() {
                 const base64 = reader.result.split(',')[1];
-                
                 const formData = new FormData();
                 formData.append('image', base64);
                 formData.append('type', 'base64');
                 
                 fetch('https://api.imgur.com/3/image', {
                     method: 'POST',
-                    headers: {
-                        'Authorization': 'Client-ID 546c25a59c58ad7'
-                    },
+                    headers: { 'Authorization': 'Client-ID 546c25a59c58ad7' },
                     body: formData
                 })
-                .then(function(response) {
-                    console.log('Imgur status:', response.status);
-                    return response.json();
-                })
+                .then(function(r) { return r.json(); })
                 .then(function(data) {
-                    console.log('Imgur respuesta:', data);
-                    
-                    if (data && data.success && data.data && data.data.link) {
-                        resolve(data.data.link);
-                    } else if (data && data.data && data.data.error) {
-                        reject(new Error(data.data.error));
-                    } else {
-                        reject(new Error('No se pudo obtener la URL'));
-                    }
+                    if (data && data.success && data.data && data.data.link) resolve(data.data.link);
+                    else reject(new Error('No se pudo obtener URL'));
                 })
-                .catch(function(error) {
-                    console.error('Error Imgur:', error);
-                    reject(new Error('Error de conexión'));
-                });
+                .catch(reject);
             };
-            reader.onerror = function() {
-                reject(new Error('Error al leer el archivo'));
-            };
+            reader.onerror = function() { reject(new Error('Error al leer archivo')); };
             reader.readAsDataURL(archivo);
         });
     }
-
 
     // =============================================
     // GUARDAR PRODUCTO
@@ -336,27 +388,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const descripcion = document.getElementById('descripcion').value.trim();
         const id = productoId.value;
         
-        const checkboxes = document.querySelectorAll('.checkbox-categoria:checked');
-        const categorias = [];
-        checkboxes.forEach(function(cb) { categorias.push(cb.value); });
-        
-        if (categorias.length === 0) { alert('Selecciona al menos una categoría'); return; }
+        if (categoriasSeleccionadas.length === 0) { alert('Selecciona al menos una categoría'); return; }
         
         const inputsUrl = document.querySelectorAll('.url-foto');
         const fotos = [];
-        inputsUrl.forEach(function(input) {
-            const v = input.value.trim();
-            if (v !== '') fotos.push(v);
-        });
-        
+        inputsUrl.forEach(function(input) { const v = input.value.trim(); if (v !== '') fotos.push(v); });
         if (fotos.length === 0) { alert('Agrega al menos una foto'); return; }
         
         const productoData = {
-            nombre: nombre,
-            precio: precio,
-            descripcion: descripcion,
-            categorias: categorias,
-            fotos: fotos,
+            nombre, precio, descripcion,
+            categorias: [...categoriasSeleccionadas],
+            fotos,
             fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
         };
         
@@ -377,13 +419,10 @@ document.addEventListener('DOMContentLoaded', function() {
             btnCancelarEdicion.style.display = 'none';
             contenedorUrls.innerHTML = '';
             crearCampoUrl('');
-            document.querySelectorAll('.checkbox-categoria').forEach(function(cb) { cb.checked = false; });
-            
+            categoriasSeleccionadas = [];
+            actualizarHeaderMultiselect();
             cargarProductosAdmin();
-        } catch (error) {
-            console.error('Error:', error);
-            alert('❌ Error al guardar');
-        }
+        } catch (error) { console.error('Error:', error); alert('❌ Error al guardar'); }
     });
 
     // =============================================
@@ -393,47 +432,34 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const snapshot = await db.collection('productos').orderBy('fechaCreacion', 'desc').get();
             todosLosProductosAdmin = [];
-            
             const catSnapshot = await db.collection('categorias').get();
             const categoriasMap = {};
             catSnapshot.forEach(function(doc) { categoriasMap[doc.id] = doc.data().nombre; });
             
-            if (snapshot.empty) {
-                listaProductosAdmin.innerHTML = '<p class="vacio">No hay productos aún.</p>';
-                return;
-            }
+            if (snapshot.empty) { listaProductosAdmin.innerHTML = '<p class="vacio">No hay productos aún.</p>'; return; }
             
             snapshot.forEach(function(doc) {
                 const p = doc.data();
-                const cats = p.categorias ? p.categorias.map(function(id) {
-                    return categoriasMap[id] || id;
-                }).join(', ') : 'Sin categoría';
-                
+                const cats = p.categorias ? p.categorias.map(function(id) { return categoriasMap[id] || id; }).join(', ') : 'Sin categoría';
                 todosLosProductosAdmin.push({ id: doc.id, ...p, categoriaNombres: cats });
             });
-            
             renderizarListaProductos(todosLosProductosAdmin);
         } catch (error) { console.error('Error:', error); }
     }
 
     function renderizarListaProductos(productos) {
         listaProductosAdmin.innerHTML = '';
-        if (productos.length === 0) {
-            listaProductosAdmin.innerHTML = '<p class="vacio">No se encontraron productos.</p>';
-            return;
-        }
+        if (productos.length === 0) { listaProductosAdmin.innerHTML = '<p class="vacio">No se encontraron productos.</p>'; return; }
         
         productos.forEach(function(producto) {
             const activo = producto.activo !== false;
             const estadoClass = activo ? 'estado-activo' : 'estado-inactivo';
             const estadoTexto = activo ? 'Activo' : 'Inactivo';
             const toggleIcon = activo ? '👁️' : '🚫';
-            const toggleTitle = activo ? 'Inhabilitar' : 'Habilitar';
             
             const div = document.createElement('div');
             div.classList.add('producto-admin-item');
             if (!activo) div.style.opacity = '0.6';
-            
             div.innerHTML = `
                 <img src="${producto.fotos[0]}" alt="${producto.nombre}" class="thumb-admin" onerror="this.src='https://via.placeholder.com/80?text=Sin+Img'" style="object-fit:contain;background:#f0f0f0;">
                 <div class="info-admin">
@@ -444,7 +470,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="estado-producto ${estadoClass}">${estadoTexto}</span>
                 </div>
                 <div class="acciones-admin">
-                    <button class="btn-toggle" onclick="window.toggleProducto('${producto.id}', ${activo})" title="${toggleTitle}">${toggleIcon}</button>
+                    <button class="btn-toggle" onclick="window.toggleProducto('${producto.id}', ${activo})" title="${activo ? 'Inhabilitar' : 'Habilitar'}">${toggleIcon}</button>
                     <button class="btn-editar" onclick="window.editarProducto('${producto.id}')" title="Editar">✏️</button>
                     <button class="btn-eliminar" onclick="window.eliminarProducto('${producto.id}')" title="Eliminar">🗑️</button>
                 </div>`;
@@ -455,12 +481,8 @@ document.addEventListener('DOMContentLoaded', function() {
     window.toggleProducto = async function(id, estadoActual) {
         if (!confirm('¿' + (estadoActual ? 'Inhabilitar' : 'Habilitar') + ' este producto?')) return;
         try {
-            await db.collection('productos').doc(id).update({
-                activo: !estadoActual,
-                fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            alert('✅ Estado actualizado');
-            cargarProductosAdmin();
+            await db.collection('productos').doc(id).update({ activo: !estadoActual, fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp() });
+            alert('✅ Estado actualizado'); cargarProductosAdmin();
         } catch (error) { console.error('Error:', error); alert('❌ Error'); }
     };
 
@@ -476,18 +498,12 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('descripcion').value = p.descripcion || '';
             
             contenedorUrls.innerHTML = '';
-            if (p.fotos && p.fotos.length > 0) {
-                p.fotos.forEach(function(url) { crearCampoUrl(url); });
-            } else {
-                crearCampoUrl('');
-            }
+            if (p.fotos && p.fotos.length > 0) { p.fotos.forEach(function(url) { crearCampoUrl(url); }); }
+            else { crearCampoUrl(''); }
             
-            await cargarCategoriasEnCheckboxes();
-            setTimeout(function() {
-                document.querySelectorAll('.checkbox-categoria').forEach(function(cb) {
-                    cb.checked = p.categorias && p.categorias.includes(cb.value);
-                });
-            }, 300);
+            categoriasSeleccionadas = p.categorias || [];
+            actualizarHeaderMultiselect();
+            cargarCategoriasEnMultiselect();
             
             tituloFormProducto.textContent = 'Editar Producto';
             btnCancelarEdicion.style.display = 'inline-block';
@@ -497,34 +513,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.eliminarProducto = async function(id) {
         if (confirm('¿Eliminar PERMANENTEMENTE este producto?')) {
-            try {
-                await db.collection('productos').doc(id).delete();
-                alert('✅ Eliminado');
-                cargarProductosAdmin();
-            } catch (error) { console.error('Error:', error); alert('❌ Error'); }
+            try { await db.collection('productos').doc(id).delete(); alert('✅ Eliminado'); cargarProductosAdmin(); }
+            catch (error) { console.error('Error:', error); alert('❌ Error'); }
         }
     };
-
-    // =============================================
-    // CATEGORÍAS EN CHECKBOXES
-    // =============================================
-    async function cargarCategoriasEnCheckboxes() {
-        try {
-            const snapshot = await db.collection('categorias').orderBy('nombre').get();
-            checkboxesCategorias.innerHTML = '';
-            if (snapshot.empty) {
-                checkboxesCategorias.innerHTML = '<p class="info-text">No hay categorías.</p>';
-                return;
-            }
-            snapshot.forEach(function(doc) {
-                const categoria = doc.data();
-                const div = document.createElement('div');
-                div.classList.add('checkbox-item');
-                div.innerHTML = '<input type="checkbox" id="cat_' + doc.id + '" value="' + doc.id + '" class="checkbox-categoria"><label for="cat_' + doc.id + '">' + categoria.nombre + '</label>';
-                checkboxesCategorias.appendChild(div);
-            });
-        } catch (error) { console.error('Error:', error); }
-    }
 
     // =============================================
     // CATEGORÍAS
@@ -535,46 +527,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const id = categoriaIdInput.value;
         if (!nombre) { alert('Nombre requerido'); return; }
         try {
-            if (id) {
-                await db.collection('categorias').doc(id).update({ nombre: nombre });
-                alert('✅ Actualizada');
-            } else {
-                await db.collection('categorias').add({ nombre: nombre, fechaCreacion: firebase.firestore.FieldValue.serverTimestamp() });
-                alert('✅ Agregada');
-            }
-            formCategoria.reset();
-            categoriaIdInput.value = '';
-            tituloFormCategoria.textContent = 'Agregar Categoría';
-            btnCancelarCategoria.style.display = 'none';
-            cargarCategoriasAdmin();
-            cargarCategoriasEnCheckboxes();
+            if (id) { await db.collection('categorias').doc(id).update({ nombre }); alert('✅ Actualizada'); }
+            else { await db.collection('categorias').add({ nombre, fechaCreacion: firebase.firestore.FieldValue.serverTimestamp() }); alert('✅ Agregada'); }
+            formCategoria.reset(); categoriaIdInput.value = '';
+            tituloFormCategoria.textContent = 'Agregar Categoría'; btnCancelarCategoria.style.display = 'none';
+            cargarCategoriasAdmin(); cargarCategoriasEnMultiselect();
         } catch (error) { console.error('Error:', error); alert('❌ Error'); }
     });
 
     btnCancelarCategoria.addEventListener('click', function() {
-        formCategoria.reset();
-        categoriaIdInput.value = '';
-        tituloFormCategoria.textContent = 'Agregar Categoría';
-        btnCancelarCategoria.style.display = 'none';
+        formCategoria.reset(); categoriaIdInput.value = '';
+        tituloFormCategoria.textContent = 'Agregar Categoría'; btnCancelarCategoria.style.display = 'none';
     });
 
     async function cargarCategoriasAdmin() {
         try {
             const snapshot = await db.collection('categorias').orderBy('nombre').get();
             listaCategoriasAdmin.innerHTML = '';
-            if (snapshot.empty) {
-                listaCategoriasAdmin.innerHTML = '<p class="vacio">No hay categorías.</p>';
-                return;
-            }
+            if (snapshot.empty) { listaCategoriasAdmin.innerHTML = '<p class="vacio">No hay categorías.</p>'; return; }
             snapshot.forEach(function(doc) {
                 const c = doc.data();
-                const nombreEscapado = c.nombre.replace(/'/g, "\\'");
                 const div = document.createElement('div');
                 div.classList.add('categoria-admin-item');
                 div.innerHTML = `
                     <div class="info-categoria"><strong>🏷️ ${c.nombre}</strong></div>
                     <div class="acciones-admin">
-                        <button class="btn-editar" onclick="window.editarCategoria('${doc.id}', '${nombreEscapado}')">✏️</button>
+                        <button class="btn-editar" onclick="window.editarCategoria('${doc.id}', '${c.nombre.replace(/'/g, "\\'")}')">✏️</button>
                         <button class="btn-eliminar" onclick="window.eliminarCategoria('${doc.id}')">🗑️</button>
                     </div>`;
                 listaCategoriasAdmin.appendChild(div);
@@ -583,20 +561,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     window.editarCategoria = function(id, nombre) {
-        categoriaIdInput.value = id;
-        nombreCategoriaInput.value = nombre;
-        tituloFormCategoria.textContent = 'Editar Categoría';
-        btnCancelarCategoria.style.display = 'inline-block';
+        categoriaIdInput.value = id; nombreCategoriaInput.value = nombre;
+        tituloFormCategoria.textContent = 'Editar Categoría'; btnCancelarCategoria.style.display = 'inline-block';
     };
 
     window.eliminarCategoria = async function(id) {
         if (confirm('¿Eliminar esta categoría?')) {
-            try {
-                await db.collection('categorias').doc(id).delete();
-                alert('✅ Eliminada');
-                cargarCategoriasAdmin();
-                cargarCategoriasEnCheckboxes();
-            } catch (error) { console.error('Error:', error); alert('❌ Error'); }
+            try { await db.collection('categorias').doc(id).delete(); alert('✅ Eliminada'); cargarCategoriasAdmin(); cargarCategoriasEnMultiselect(); }
+            catch (error) { console.error('Error:', error); alert('❌ Error'); }
         }
     };
 
@@ -614,10 +586,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const texto = terminosTexto.value.trim();
         if (!texto) { alert('No puede estar vacío'); return; }
         try {
-            await db.collection('configuracion').doc('terminos').set({
-                texto: texto,
-                fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
-            });
+            await db.collection('configuracion').doc('terminos').set({ texto, fechaActualizacion: firebase.firestore.FieldValue.serverTimestamp() });
             alert('✅ Términos actualizados');
         } catch (error) { console.error('Error:', error); alert('❌ Error'); }
     });
