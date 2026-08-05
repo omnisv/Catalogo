@@ -180,150 +180,137 @@ function crearCampoUrl(valor = '') {
 btnAgregarUrl.addEventListener('click', (e) => { e.preventDefault(); crearCampoUrl(''); });
 
 // =============================================
-// SUBIR IMAGEN A POSTIMAGES (CON DEPURACIÓN DETALLADA)
+// SUBIR IMAGEN A POSTIMAGES (CORREGIDO)
 // =============================================
 inputFileOculto.addEventListener('change', async function() {
     const archivo = this.files[0];
     if (!archivo) return;
     
-    // MOSTRAR INFORMACIÓN DEL ARCHIVO
-    console.log('═══════════════════════════════════');
-    console.log('📁 INFORMACIÓN DEL ARCHIVO:');
-    console.log('  Nombre:', archivo.name);
-    console.log('  Tipo:', archivo.type);
-    console.log('  Tamaño:', (archivo.size / 1024).toFixed(2), 'KB');
-    console.log('  Última modificación:', new Date(archivo.lastModified).toLocaleString());
-    console.log('═══════════════════════════════════');
+    console.log('📁 Archivo:', archivo.name, '- Tipo:', archivo.type, '- Tamaño:', (archivo.size / 1024).toFixed(2), 'KB');
     
-    // Validar tipo
     if (!archivo.type.startsWith('image/')) {
-        console.error('❌ ERROR: El archivo NO es una imagen. Tipo detectado:', archivo.type);
-        alert('❌ Selecciona una imagen (JPG, PNG, GIF, WebP). El archivo seleccionado es: ' + archivo.type);
+        alert('❌ Selecciona una imagen (JPG, PNG, GIF, WebP).');
         this.value = '';
         return;
     }
     
-    // Validar tamaño
     if (archivo.size > 10 * 1024 * 1024) {
-        console.error('❌ ERROR: Imagen demasiado grande:', (archivo.size / 1024 / 1024).toFixed(2), 'MB');
         alert('❌ Imagen demasiado grande. Máximo 10MB.');
         this.value = '';
         return;
     }
     
     estadoSubida.style.display = 'block';
-    textoEstadoSubida.textContent = '⏳ Subiendo a Postimages...';
+    textoEstadoSubida.textContent = '⏳ Subiendo imagen a Postimages...';
     textoEstadoSubida.style.color = '';
     
-    // INTENTO 1: POSTIMAGES API JSON
     let urlImagen = '';
     
+    // =============================================
+    // MÉTODO 1: Usar el endpoint oficial con el campo correcto
+    // =============================================
     try {
-        console.log('🔵 INTENTO 1: Subiendo a postimages.org/json/rr...');
+        console.log('🔵 Método 1: POST a postimages.org/json/rr');
+        
         const formData = new FormData();
-        formData.append('upload', archivo);
+        // Postimages espera el campo 'file' o 'upload'
+        formData.append('file', archivo, archivo.name);
+        formData.append('upload', archivo, archivo.name);
         formData.append('format', 'json');
+        formData.append('optsize', '0'); // Sin redimensionar
         
         const respuesta = await fetch('https://postimages.org/json/rr', {
             method: 'POST',
             body: formData
         });
         
-        console.log('  Status:', respuesta.status, respuesta.statusText);
-        console.log('  Headers:', Object.fromEntries(respuesta.headers.entries()));
+        console.log('  Status:', respuesta.status);
+        const data = await respuesta.json();
+        console.log('  Respuesta:', data);
         
-        const textoRespuesta = await respuesta.text();
-        console.log('  Respuesta cruda (primeros 500 chars):', textoRespuesta.substring(0, 500));
-        
-        let data;
-        try {
-            data = JSON.parse(textoRespuesta);
-            console.log('  ✅ JSON parseado correctamente:', data);
-        } catch (parseError) {
-            console.error('  ❌ No se pudo parsear JSON:', parseError.message);
-            console.error('  Respuesta completa:', textoRespuesta);
-            throw new Error('Respuesta no es JSON válido');
-        }
-        
-        if (data && data.image && data.image.url) {
-            urlImagen = data.image.url;
-            console.log('  ✅ URL obtenida:', urlImagen);
-        } else if (data && data.url) {
+        if (data && data.url) {
             urlImagen = data.url;
-            console.log('  ✅ URL obtenida (alternativa):', urlImagen);
+            console.log('  ✅ URL (directa):', urlImagen);
+        } else if (data && data.image && data.image.url) {
+            urlImagen = data.image.url;
+            console.log('  ✅ URL (image.url):', urlImagen);
+        } else if (data && data.image && data.image.link) {
+            urlImagen = data.image.link;
+            console.log('  ✅ URL (image.link):', urlImagen);
         } else if (data && data.error) {
-            console.error('  ❌ Postimages devolvió error:', data.error);
-            throw new Error(data.error);
-        } else {
-            console.error('  ❌ Formato de respuesta desconocido');
-            throw new Error('Formato desconocido');
+            console.warn('  ⚠️ Error del servidor:', data.error);
         }
         
-    } catch (errorPost) {
-        console.error('❌ FALLÓ POSTIMAGES API JSON:', errorPost.message);
-        console.log('🔵 INTENTO 2: Probando otro endpoint de Postimages...');
-        
-        // INTENTO 2: OTRO ENDPOINT
+    } catch (error) {
+        console.warn('  ⚠️ Método 1 falló:', error.message);
+    }
+    
+    // =============================================
+    // MÉTODO 2: Si falló, probar sin formato JSON
+    // =============================================
+    if (!urlImagen) {
         try {
+            console.log('🔵 Método 2: POST a postimages.org/upload');
+            
             const formData2 = new FormData();
-            formData2.append('file', archivo);
-            formData2.append('upload', archivo);
+            formData2.append('file', archivo, archivo.name);
             
             const respuesta2 = await fetch('https://postimages.org/upload', {
                 method: 'POST',
-                body: formData2
+                body: formData2,
+                mode: 'no-cors' // Evitar error CORS
             });
             
-            console.log('  Status intento 2:', respuesta2.status);
-            const texto2 = await respuesta2.text();
-            console.log('  Respuesta intento 2 (primeros 500 chars):', texto2.substring(0, 500));
+            console.log('  Status:', respuesta2.status, '(no-cors, no se puede leer respuesta)');
             
-            // Buscar URL en la respuesta HTML
-            const match = texto2.match(/https:\/\/i\.postimg\.cc\/[^\s"']+/);
-            if (match) {
-                urlImagen = match[0];
-                console.log('  ✅ URL encontrada en HTML:', urlImagen);
-            } else {
-                console.warn('  ⚠️ No se encontró URL en la respuesta');
-            }
-        } catch (errorPost2) {
-            console.error('❌ FALLÓ SEGUNDO INTENTO:', errorPost2.message);
+            // Con no-cors no podemos leer la respuesta, así que este método no nos sirve para obtener URL
+            console.warn('  ⚠️ Método 2 no puede obtener URL por restricciones CORS');
+            
+        } catch (error) {
+            console.warn('  ⚠️ Método 2 falló:', error.message);
         }
     }
     
-    // SI TODO FALLÓ, PROBAR IMGBB
+    // =============================================
+    // MÉTODO 3: Usar ImgBB como respaldo
+    // =============================================
     if (!urlImagen) {
-        console.log('🟠 INTENTO 3: Probando ImgBB como respaldo...');
         try {
+            console.log('🟠 Método 3: Probando ImgBB...');
+            
+            // Convertir imagen a base64
+            const base64 = await fileToBase64(archivo);
+            
             const formData3 = new FormData();
-            formData3.append('image', archivo);
+            formData3.append('image', base64.split(',')[1]); // Solo la parte base64
             
             const respuesta3 = await fetch('https://api.imgbb.com/1/upload?key=4fbf1f4b2fb63db7ed4f4a8e2b2b5f90', {
                 method: 'POST',
                 body: formData3
             });
             
-            console.log('  Status ImgBB:', respuesta3.status);
+            console.log('  Status:', respuesta3.status);
             const data3 = await respuesta3.json();
-            console.log('  Respuesta ImgBB:', data3);
+            console.log('  Respuesta:', data3);
             
             if (data3 && data3.success && data3.data && data3.data.url) {
                 urlImagen = data3.data.url;
                 console.log('  ✅ URL ImgBB:', urlImagen);
             }
-        } catch (errorImgBB) {
-            console.error('❌ FALLÓ IMGBB:', errorImgBB.message);
+            
+        } catch (error) {
+            console.warn('  ⚠️ ImgBB falló:', error.message);
         }
     }
     
-    // RESULTADO FINAL
-    console.log('═══════════════════════════════════');
+    // =============================================
+    // RESULTADO
+    // =============================================
     if (urlImagen) {
-        console.log('✅ ÉXITO - URL FINAL:', urlImagen);
+        console.log('✅ ÉXITO - URL:', urlImagen);
         
         if (campoInputActivo) {
             campoInputActivo.value = urlImagen;
-            console.log('  Asignada al campo activo');
         } else {
             const campos = document.querySelectorAll('.url-foto');
             let asignado = false;
@@ -331,38 +318,39 @@ inputFileOculto.addEventListener('change', async function() {
                 if (campo.value.trim() === '' && !asignado) {
                     campo.value = urlImagen;
                     asignado = true;
-                    console.log('  Asignada al primer campo vacío');
                 }
             });
-            if (!asignado) {
-                crearCampoUrl(urlImagen);
-                console.log('  Creado nuevo campo con la URL');
-            }
+            if (!asignado) crearCampoUrl(urlImagen);
         }
         
         textoEstadoSubida.textContent = '✅ ¡Imagen subida correctamente!';
         textoEstadoSubida.style.color = '#27ae60';
     } else {
-        console.error('❌ FRACASO - Ningún método funcionó');
-        console.log('  Verifica:');
-        console.log('  1. ¿Tienes conexión a internet?');
-        console.log('  2. ¿Hay algún bloqueador (AdBlock, firewall)?');
-        console.log('  3. ¿El archivo es realmente una imagen?');
-        console.log('  4. ¿El tamaño es menor a 10MB?');
-        
-        textoEstadoSubida.textContent = '❌ Error al subir. Abre F12 > Console para ver detalles.';
+        console.error('❌ Todos los métodos fallaron');
+        textoEstadoSubida.textContent = '❌ Error al subir. Revisa F12 > Console.';
         textoEstadoSubida.style.color = '#e74c3c';
     }
-    console.log('═══════════════════════════════════');
     
     setTimeout(() => {
         estadoSubida.style.display = 'none';
         textoEstadoSubida.style.color = '';
-    }, 6000);
+    }, 4000);
     
     this.value = '';
     campoInputActivo = null;
 });
+
+// =============================================
+// FUNCIÓN AUXILIAR: Convertir archivo a base64
+// =============================================
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
 
 // =============================================
 // CARGAR CATEGORÍAS EN CHECKBOXES
