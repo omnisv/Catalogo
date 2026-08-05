@@ -79,12 +79,18 @@
                             <textarea id="descripcion" placeholder="Describe el producto..." rows="4"></textarea>
                         </div>
                         
+                        <!-- FOTOS -->
                         <div class="form-group">
                             <label>📸 Fotos del producto *</label>
                             <div id="contenedorUrls"></div>
                             <div class="botones-fotos">
                                 <button type="button" id="btnAgregarUrl" class="btn-agregar">+ Agregar URL manual</button>
-                                <button type="button" id="btnSubirPostimages" class="btn-subir-imagen">📤 Subir a Postimages</button>
+                            </div>
+                            <!-- Postimages: subida directa -->
+                            <div class="postimages-upload-area">
+                                <p class="postimages-label">📤 O sube imágenes directamente:</p>
+                                <div id="postimagesContainer"></div>
+                                <small style="color: #666; display: block; margin-top: 6px;">La imagen se sube a Postimages y la URL se pega automáticamente.</small>
                             </div>
                             <div id="estadoSubida" class="estado-subida" style="display:none;">
                                 <span id="textoEstadoSubida"></span>
@@ -126,12 +132,9 @@
                         </div>
                     </form>
                 </div>
-
                 <div class="lista-container">
                     <h2>Categorías Existentes</h2>
-                    <div id="listaCategoriasAdmin">
-                        <p>Cargando categorías...</p>
-                    </div>
+                    <div id="listaCategoriasAdmin"><p>Cargando categorías...</p></div>
                 </div>
             </div>
         </div>
@@ -144,14 +147,12 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs (IMPORTANTE: en este orden) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     
-    <!-- Configuración de Firebase (después de los SDKs) -->
+    <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
-    
-    <!-- Admin JS (después de firebase-config) -->
     <script src="js/admin.js"></script>
 </body>
 </html>
