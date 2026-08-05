@@ -86,26 +86,16 @@
                         <div class="form-group">
                             <label>📸 Fotos del producto *</label>
                             
-                            <!-- Contenedor de campos de URL -->
                             <div id="contenedorUrls">
-                                <div class="url-entry">
-                                    <div class="url-input-group">
-                                        <input type="url" class="url-foto" placeholder="https://ejemplo.com/foto.jpg">
-                                        <button type="button" class="btn-subir-foto" title="Subir foto desde PC">📤</button>
-                                    </div>
-                                    <button type="button" class="btn-eliminar-url" title="Eliminar">✕</button>
-                                </div>
+                                <!-- Los campos se generan con JS -->
                             </div>
                             
-                            <!-- Input de archivo oculto para Postimages -->
                             <input type="file" id="inputFileOculto" accept="image/*" style="display:none;">
                             
-                            <!-- Botones -->
                             <div class="botones-fotos">
                                 <button type="button" id="btnAgregarUrl" class="btn-agregar">+ Agregar URL manual</button>
                             </div>
                             
-                            <!-- Estado de subida -->
                             <div id="estadoSubida" class="estado-subida" style="display:none;">
                                 <span id="textoEstadoSubida">⏳ Subiendo imagen...</span>
                             </div>
@@ -169,10 +159,6 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
-    
-    <!-- Postimages plugin -->
-    <script src="https://postimages.org/website.js"></script>
     
     <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
