@@ -79,18 +79,22 @@
                             <textarea id="descripcion" placeholder="Describe el producto..." rows="4"></textarea>
                         </div>
                         
-                        <!-- FOTOS -->
                         <div class="form-group">
                             <label>📸 Fotos del producto *</label>
                             <div id="contenedorUrls"></div>
                             <div class="botones-fotos">
                                 <button type="button" id="btnAgregarUrl" class="btn-agregar">+ Agregar URL manual</button>
                             </div>
-                            <!-- Postimages: subida directa -->
-                            <div class="postimages-upload-area">
-                                <p class="postimages-label">📤 O sube imágenes directamente:</p>
-                                <div id="postimagesContainer"></div>
-                                <small style="color: #666; display: block; margin-top: 6px;">La imagen se sube a Postimages y la URL se pega automáticamente.</small>
+                            <div class="upload-area-container">
+                                <p class="upload-label">📤 O sube imágenes directamente:</p>
+                                <div class="upload-area" id="dropArea">
+                                    <input type="file" id="freeimageInput" accept="image/*" multiple style="display:none;">
+                                    <div class="upload-content">
+                                        <span class="upload-icon">📁</span>
+                                        <p>Arrastra imágenes aquí o <button type="button" id="btnSeleccionarImagen" class="btn-link">selecciona archivos</button></p>
+                                        <small>JPG, PNG, GIF, WebP • Máx 32MB c/u • Freeimage.host</small>
+                                    </div>
+                                </div>
                             </div>
                             <div id="estadoSubida" class="estado-subida" style="display:none;">
                                 <span id="textoEstadoSubida"></span>
@@ -109,9 +113,7 @@
                     <div class="barra-busqueda-admin">
                         <input type="text" id="buscadorAdmin" placeholder="🔍 Buscar producto por nombre, categoría...">
                     </div>
-                    <div id="listaProductosAdmin">
-                        <p>Cargando productos...</p>
-                    </div>
+                    <div id="listaProductosAdmin"><p>Cargando productos...</p></div>
                 </div>
             </div>
         </div>
@@ -147,11 +149,8 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    
-    <!-- Scripts -->
     <script src="js/firebase-config.js"></script>
     <script src="js/admin.js"></script>
 </body>
